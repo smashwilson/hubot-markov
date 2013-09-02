@@ -25,7 +25,9 @@
 
   "devDependencies": {
     "mocha": "*",
-    "chai": "*"
+    "chai": "*",
+    "sinon-chai": "*",
+    "sinon": "*"
   },
 
   "main": "index.coffee",
