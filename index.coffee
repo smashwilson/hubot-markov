@@ -6,4 +6,7 @@ module.exports = (robot, scripts) ->
   fs.exists scriptsPath, (exists) ->
     if exists
       for script in fs.readdirSync(scriptsPath)
-        robot.loadFile(scriptsPath, script) if script in scripts
+        if scripts?
+          robot.loadFile(scriptsPath, script) if script in scripts
+        else
+          robot.loadFile(scriptsPath, script)
