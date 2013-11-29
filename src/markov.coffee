@@ -25,11 +25,30 @@
 # Author:
 #   smashwilson
 
+Util = require 'util'
+
+class MarkovModel
+  constructor: (@storage, @ply) ->
+
+  transitions: (phrase) ->
+    words = (word for word in phrase.split /\s+/ when word.length > 0)
+    words.unshift null for i in [1..@ply]
+    words.push null for i in [1..@ply]
+    for i in [0..words.length - @ply - 1]
+      { from: words.slice(i, i + @ply), to: words[i + @ply] }
+
+  learn: (phrase) ->
+    for t in this.transitions(phrase)
+      ts = @storage[t.from] ?= {}
+      ts[t.to] = (ts[t.to] or 0) + 1
+
 module.exports = (robot) ->
 
-  # The robot hears ALL. You cannot run.
-  robot.hear /./, (msg) ->
-    #
+  model = new MarkovModel(robot.brain.data, 1)
 
-  robot.respond /markov( (.*))?/, (msg) ->
-    msg.reply 'yup yup'
+  # The robot hears ALL. You cannot run.
+  robot.hear /.+$/, (msg) ->
+    tokens = model.learn msg.match[0]
+
+  robot.respond /markov(\s+(.+))?$/i, (msg) ->
+    msg.reply "yup yup: #{msg.match[2]}"
