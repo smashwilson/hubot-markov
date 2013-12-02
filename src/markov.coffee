@@ -28,27 +28,84 @@
 Util = require 'util'
 
 class MarkovModel
+  sentinel = ' '
+
   constructor: (@storage, @ply) ->
 
-  transitions: (phrase) ->
-    words = (word for word in phrase.split /\s+/ when word.length > 0)
+  _words: (phrase) ->
+    (word for word in phrase.split /\s+/ when word.length > 0)
+
+  _random: (max) ->
+    Math.floor(Math.random() * (max + 1))
+
+  _chooseWeighted: (choices) ->
+    total = 0
+    total += freq for key, freq of choices
+    chosen = @._random(total)
+
+    acc = 0
+    for key, freq of choices
+      acc += freq
+      return key if acc >= chosen
+
+    throw "Bad choice: #{chosen}"
+
+  _encode: (key) ->
+    encoded = for part in key
+      if part then "#{part.length}#{part}" else "0"
+    encoded.join('')
+
+  _decode: (key) ->
+    results = []
+    index = 0
+    while index < key.length
+      length = parseInt key.charAt(index)
+      part = key.slice(index + 1, index + 1 + length)
+      results.push part
+      index += length
+    results
+
+  _transitions: (phrase) ->
+    words = @._words(phrase)
     words.unshift null for i in [1..@ply]
     words.push null for i in [1..@ply]
     for i in [0..words.length - @ply - 1]
-      { from: words.slice(i, i + @ply), to: words[i + @ply] }
+      { from: @._encode(words.slice(i, i + @ply)), to: words[i + @ply] or sentinel }
 
   learn: (phrase) ->
-    for t in this.transitions(phrase)
+    for t in @._transitions(phrase)
       ts = @storage[t.from] ?= {}
       ts[t.to] = (ts[t.to] or 0) + 1
 
+  generate: (seed, max) ->
+    words = @._words(seed)
+
+    key = words.slice(words.length - @ply, words.length)
+    if key.length < @ply
+      key.unshift null for i in [1..@ply - key.length]
+
+    chain = []
+    chain.push words...
+
+    for i in [words.length..max]
+      next = @._chooseWeighted @storage[@._encode(key)]
+      break if next is sentinel
+
+      chain.push next
+      key.shift()
+      key.push next
+
+    chain.join ' '
+
 module.exports = (robot) ->
 
-  model = new MarkovModel(robot.brain.data, 1)
+  robot.brain.data.markov ?= {}
+  model = new MarkovModel(robot.brain.data.markov, 2)
 
   # The robot hears ALL. You cannot run.
   robot.hear /.+$/, (msg) ->
-    tokens = model.learn msg.match[0]
+    return if /^hubot:?/i.test msg.match[0]
+    model.learn msg.match[0]
 
   robot.respond /markov(\s+(.+))?$/i, (msg) ->
-    msg.reply "yup yup: #{msg.match[2]}"
+    msg.reply model.generate msg.match[2] or '', 10
