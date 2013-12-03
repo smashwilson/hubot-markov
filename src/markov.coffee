@@ -25,7 +25,6 @@
 # Author:
 #   smashwilson
 
-# TODO: actually read env vars for configuration.
 # TODO: docs
 
 Util = require 'util'
@@ -121,7 +120,10 @@ module.exports = (robot) ->
   client = Redis.createClient(info.port, info.hostname)
   storage = new RedisMarkovStorage(client)
 
-  model = new MarkovModel(storage, 2)
+  ply = process.env.HUBOT_MARKOV_PLY or 1
+  max = process.env.HUBOT_MARKOV_MAX or 50
+
+  model = new MarkovModel(storage, ply)
 
   # The robot hears ALL. You cannot run.
   robot.hear /.+$/, (msg) ->
@@ -138,5 +140,5 @@ module.exports = (robot) ->
 
   # Generate markov chains on demand, optionally seeded by some initial state.
   robot.respond /markov(\s+(.+))?$/i, (msg) ->
-    model.generate msg.match[2] or '', 10, (text) =>
+    model.generate msg.match[2] or '', max, (text) =>
       msg.reply text
