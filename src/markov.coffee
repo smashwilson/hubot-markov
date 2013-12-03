@@ -59,4 +59,4 @@ module.exports = (robot) ->
   # Generate markov chains on demand, optionally seeded by some initial state.
   robot.respond /markov(\s+(.+))?$/i, (msg) ->
     model.generate msg.match[2] or '', max, (text) =>
-      msg.reply text
+      msg.send text
