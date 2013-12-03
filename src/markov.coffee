@@ -53,7 +53,7 @@ class MarkovModel
     acc = 0
     for key, freq of choices
       acc += parseInt(freq)
-      return key if acc >= chosen
+      return key if chosen <= acc
 
     throw "Bad choice: #{chosen}"
 
