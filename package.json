@@ -1,7 +1,7 @@
 {
   "name": "hubot-markov",
   "description": "Build a markov model of everything Hubot hears.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "Ash Wilson <smashwilson@gmail.com>",
   "license": "MIT",
 
