@@ -25,6 +25,10 @@
 # Author:
 #   smashwilson
 
+# TODO: actually read env vars for configuration.
+# TODO: use Redis directly for storage instead of robot.brain.
+# TODO: docs
+
 Util = require 'util'
 
 class MarkovModel
