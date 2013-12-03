@@ -21,7 +21,8 @@
   },
 
   "dependencies": {
-    "coffee-script": "~1.6"
+    "coffee-script": "~1.6",
+    "redis": "~0.9.1"
   },
 
   "devDependencies": {

@@ -26,10 +26,11 @@
 #   smashwilson
 
 # TODO: actually read env vars for configuration.
-# TODO: use Redis directly for storage instead of robot.brain.
 # TODO: docs
 
 Util = require 'util'
+Url = require 'url'
+Redis = require 'redis'
 
 class MarkovModel
   sentinel = ' '
@@ -43,45 +44,30 @@ class MarkovModel
     Math.floor(Math.random() * (max + 1))
 
   _chooseWeighted: (choices) ->
+    return sentinel unless choices
+
     total = 0
-    total += freq for key, freq of choices
+    total += parseInt(freq) for key, freq of choices
     chosen = @._random(total)
 
     acc = 0
     for key, freq of choices
-      acc += freq
+      acc += parseInt(freq)
       return key if acc >= chosen
 
     throw "Bad choice: #{chosen}"
-
-  _encode: (key) ->
-    encoded = for part in key
-      if part then "#{part.length}#{part}" else "0"
-    encoded.join('')
-
-  _decode: (key) ->
-    results = []
-    index = 0
-    while index < key.length
-      length = parseInt key.charAt(index)
-      part = key.slice(index + 1, index + 1 + length)
-      results.push part
-      index += length
-    results
 
   _transitions: (phrase) ->
     words = @._words(phrase)
     words.unshift null for i in [1..@ply]
     words.push null for i in [1..@ply]
     for i in [0..words.length - @ply - 1]
-      { from: @._encode(words.slice(i, i + @ply)), to: words[i + @ply] or sentinel }
+      { from: words.slice(i, i + @ply), to: words[i + @ply] or sentinel }
 
   learn: (phrase) ->
-    for t in @._transitions(phrase)
-      ts = @storage[t.from] ?= {}
-      ts[t.to] = (ts[t.to] or 0) + 1
+    @storage.increment(t) for t in @._transitions(phrase)
 
-  generate: (seed, max) ->
+  generate: (seed, max, callback) ->
     words = @._words(seed)
 
     key = words.slice(words.length - @ply, words.length)
@@ -91,20 +77,51 @@ class MarkovModel
     chain = []
     chain.push words...
 
-    for i in [words.length..max]
-      next = @._chooseWeighted @storage[@._encode(key)]
-      break if next is sentinel
+    @._generate_more key, chain, max, callback
 
-      chain.push next
-      key.shift()
-      key.push next
+  _generate_more: (key, chain, max, callback) ->
+    @storage.get key, (choices) =>
+      next = @._chooseWeighted choices
+      if next is sentinel or max <= 0
+        callback(chain.join(' '))
+      else
+        chain.push next
 
-    chain.join ' '
+        key.shift()
+        key.push next
+
+        @._generate_more(key, chain, max - 1, callback)
+
+
+class RedisMarkovStorage
+
+  keyprefix = "markov:"
+
+  constructor: (@client) ->
+
+  _encode: (key) ->
+    encoded = for part in key
+      if part then "#{part.length}#{part}" else "0"
+    keyprefix + encoded.join('')
+
+  increment: (transition) ->
+    @client.hincrby(@._encode(transition.from), transition.to, 1)
+
+  get: (prior, callback) ->
+    @client.hgetall @._encode(prior), (err, hash) ->
+      throw err if err
+      callback(hash)
 
 module.exports = (robot) ->
 
-  robot.brain.data.markov ?= {}
-  model = new MarkovModel(robot.brain.data.markov, 2)
+  info = Url.parse process.env.REDISTOGO_URL or
+    process.env.REDISCLOUD_URL or
+    process.env.BOXEN_REDIS_URL or
+    'redis://localhost:6379'
+  client = Redis.createClient(info.port, info.hostname)
+  storage = new RedisMarkovStorage(client)
+
+  model = new MarkovModel(storage, 2)
 
   # The robot hears ALL. You cannot run.
   robot.hear /.+$/, (msg) ->
@@ -112,13 +129,14 @@ module.exports = (robot) ->
     name = robot.name.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
     if robot.alias
       alias = robot.alias.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
-      r = new Regexp("^[@]?(?:#{alias}[:,]?|#{name}[:,]?)")
+      r = new RegExp("^[@]?(?:#{alias}[:,]?|#{name}[:,]?)", "i")
     else
-      r = new Regexp("^[@]?#{name}[:,]?")
+      r = new RegExp("^[@]?#{name}[:,]?", "i")
     return if r.test msg.match[0]
 
     model.learn msg.match[0]
 
   # Generate markov chains on demand, optionally seeded by some initial state.
   robot.respond /markov(\s+(.+))?$/i, (msg) ->
-    msg.reply model.generate msg.match[2] or '', 10
+    model.generate msg.match[2] or '', 10, (text) =>
+      msg.reply text
