@@ -108,8 +108,17 @@ module.exports = (robot) ->
 
   # The robot hears ALL. You cannot run.
   robot.hear /.+$/, (msg) ->
-    return if /^hubot:?/i.test msg.match[0]
+    # Don't learn from commands sent to the bot directly.
+    name = robot.name.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
+    if robot.alias
+      alias = robot.alias.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
+      r = new Regexp("^[@]?(?:#{alias}[:,]?|#{name}[:,]?)")
+    else
+      r = new Regexp("^[@]?#{name}[:,]?")
+    return if r.test msg.match[0]
+
     model.learn msg.match[0]
 
+  # Generate markov chains on demand, optionally seeded by some initial state.
   robot.respond /markov(\s+(.+))?$/i, (msg) ->
     msg.reply model.generate msg.match[2] or '', 10
