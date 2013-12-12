@@ -8,7 +8,7 @@ class MarkovModel
   # Build a new model with the provided storage backend and order. A markov model's
   # order is the number of prior states that will be examined to determine the
   # probabilities of the next state.
-  constructor: (@storage, @ply) ->
+  constructor: (@storage, @ply, @min) ->
 
   # Split a line of text into whitespace-separated, nonempty words.
   _words: (phrase) ->
@@ -39,25 +39,30 @@ class MarkovModel
     # If we get here, "chosen" was greater than total.
     throw "Bad choice: #{chosen} from #{total}"
 
-  # Generate each state transition of order @ply among the words of "phrase". For
-  # example, with @ply 2 and a phrase "a b c d", this would generate:
+  # Generate each state transition of order @ply among "words". For example,
+  # with @ply 2 and a phrase ["a", "b", "c", "d"], this would generate:
   #
   # { from: [null, null] to: 'a' }
   # { from: [null, 'a'] to: 'b' }
   # { from: ['a', 'b'], to: 'c' }
   # { from: ['b', 'c'], to: 'd' }
   # { from: ['c', 'd'], to: ' ' }
-  _transitions: (phrase) ->
-    words = @._words(phrase)
+  _transitions: (words) ->
     words.unshift null for i in [1..@ply]
     words.push null for i in [1..@ply]
     for i in [0..words.length - @ply - 1]
       { from: words.slice(i, i + @ply), to: words[i + @ply] or sentinel }
 
   # Add a phrase to the model. Increments the frequency of each @ply-order
-  # state transition extracted from the phrase.
+  # state transition extracted from the phrase. Ignores any phrases containing
+  # less than @min words.
   learn: (phrase) ->
-    @storage.increment(t) for t in @._transitions(phrase)
+    words = @._words(phrase)
+
+    # Ignore phrases with fewer than the minimum words.
+    return if words.length < @min
+
+    @storage.increment(t) for t in @._transitions(words)
 
   # Generate random text based on the current state of the model and invokes
   # "callback" with it. The generated text will begin with "seed" and contain
