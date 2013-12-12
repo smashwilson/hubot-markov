@@ -40,11 +40,15 @@ module.exports = (robot) ->
   # Read markov-specific configuration from the environment.
   ply = process.env.HUBOT_MARKOV_PLY or 1
   max = process.env.HUBOT_MARKOV_MAX or 50
+  min_train = process.env.HUBOT_MARKOV_MIN_TRAIN or 1
 
   model = new MarkovModel(storage, ply)
 
   # The robot hears ALL. You cannot run.
   robot.catchAll (msg) ->
+
+    # Return on empty messages
+    return if !msg.message.text
     
     # Don't learn from commands sent to the bot directly.
     name = robot.name.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
@@ -56,6 +60,7 @@ module.exports = (robot) ->
     
     # Test to see if the command was directed at the bot
     return if r.test msg.message.text
+
 
     model.learn msg.message.text
 
