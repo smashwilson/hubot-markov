@@ -13,8 +13,8 @@
 #
 # Configuration:
 #   HUBOT_MARKOV_PLY - Order of the markov model to build. Default: 1
-#   HUBOT_MARKOV_MIN - Minimum number of tokens to use in training. Default: 1
-#   HUBOT_MARKOV_MAX - Maximum number of tokens in a generated chain. Default: 50
+#   HUBOT_MARKOV_LEARN_MIN - Minimum number of tokens to use in training. Default: 1
+#   HUBOT_MARKOV_GENERATE_MAX - Maximum number of tokens in a generated chain. Default: 50
 #
 # Commands:
 #   hubot markov <seed> - Generate a markov chain, optionally seeded with the provided phrase.
@@ -40,8 +40,8 @@ module.exports = (robot) ->
 
   # Read markov-specific configuration from the environment.
   ply = process.env.HUBOT_MARKOV_PLY or 1
-  min = process.env.HUBOT_MARKOV_MIN or 1
-  max = process.env.HUBOT_MARKOV_MAX or 50
+  min = process.env.HUBOT_MARKOV_LEARN_MIN or 1
+  max = process.env.HUBOT_MARKOV_GENERATE_MAX or 50
 
   model = new MarkovModel(storage, ply, min)
 
