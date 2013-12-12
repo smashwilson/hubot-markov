@@ -8,7 +8,7 @@ class MarkovModel
   # Build a new model with the provided storage backend and order. A markov model's
   # order is the number of prior states that will be examined to determine the
   # probabilities of the next state.
-  constructor: (@storage, @ply) ->
+  constructor: (@storage, @ply, @mintrain) ->
 
   # Split a line of text into whitespace-separated, nonempty words.
   _words: (phrase) ->
