@@ -44,17 +44,18 @@ module.exports = (robot) ->
   model = new MarkovModel(storage, ply)
 
   # The robot hears ALL. You cannot run.
-  robot.hear /.+$/, (msg) ->
-    # Don't learn from commands sent to the bot directly.
+  robot.catchAll (msg) ->
+    console.log(msg.message)
+    ## Don't learn from commands sent to the bot directly.
     name = robot.name.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
     if robot.alias
       alias = robot.alias.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
       r = new RegExp("^[@]?(?:#{alias}[:,]?|#{name}[:,]?)", "i")
     else
       r = new RegExp("^[@]?#{name}[:,]?", "i")
-    return if r.test msg.match[0]
+    return if r.test msg.message.text
 
-    model.learn msg.match[0]
+    model.learn msg.message.text
 
   # Generate markov chains on demand, optionally seeded by some initial state.
   robot.respond /markov(\s+(.+))?$/i, (msg) ->
