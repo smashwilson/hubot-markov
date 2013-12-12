@@ -44,7 +44,7 @@ how many previous states (words) are considered to choose the next state. You
 can bump this up if you'd like, but the default of 1 is both economical with
 storage and maximally hilarious.
 
-`HUBOT_MARKOV_GENERATE_MIN` controls the minimum length of a phrase that will
+`HUBOT_MARKOV_LEARN_MIN` controls the minimum length of a phrase that will
 be used to train the model, default 1. Set this higher to avoid training your
 model with a bunch of immediate terminal transitions like "lol".
 
