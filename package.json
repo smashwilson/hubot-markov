@@ -3,6 +3,18 @@
   "description": "Build a markov model of everything Hubot hears.",
   "version": "1.2.0",
   "author": "Ash Wilson <smashwilson@gmail.com>",
+
+  "contributors": [
+    {
+      "name": "Ash Wilson",
+      "email": "smashwilson@gmail.com"
+    },
+    {
+      "name": "Kyle Kelley",
+      "email": "rgbkrk@gmail.com"
+    }
+  ],
+
   "license": "MIT",
 
   "keywords": [
