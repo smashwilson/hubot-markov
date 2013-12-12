@@ -9,7 +9,7 @@ chat.
 
 ```json
   "dependencies": {
-    "hubot-markov-model": "~1.0.0"
+    "hubot-markov-model": "~1.2.0"
   },
 ```
 
