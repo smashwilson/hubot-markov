@@ -45,14 +45,16 @@ module.exports = (robot) ->
 
   # The robot hears ALL. You cannot run.
   robot.catchAll (msg) ->
-    console.log(msg.message)
-    ## Don't learn from commands sent to the bot directly.
+    
+    # Don't learn from commands sent to the bot directly.
     name = robot.name.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
     if robot.alias
       alias = robot.alias.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
       r = new RegExp("^[@]?(?:#{alias}[:,]?|#{name}[:,]?)", "i")
     else
       r = new RegExp("^[@]?#{name}[:,]?", "i")
+    
+    # Test to see if the command was directed at the bot
     return if r.test msg.message.text
 
     model.learn msg.message.text
