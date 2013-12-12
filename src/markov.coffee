@@ -49,17 +49,6 @@ module.exports = (robot) ->
     # Return on empty messages
     return if !msg.message.text
     
-    # Don't learn from commands sent to the bot directly.
-    name = robot.name.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
-    if robot.alias
-      alias = robot.alias.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
-      r = new RegExp("^[@]?(?:#{alias}[:,]?|#{name}[:,]?)", "i")
-    else
-      r = new RegExp("^[@]?#{name}[:,]?", "i")
-    
-    # Test to see if the command was directed at the bot
-    return if r.test msg.message.text
-
     model.learn msg.message.text
 
   # Generate markov chains on demand, optionally seeded by some initial state.
