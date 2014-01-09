@@ -36,6 +36,10 @@ module.exports = (robot) ->
     process.env.BOXEN_REDIS_URL or
     'redis://localhost:6379'
   client = Redis.createClient(info.port, info.hostname)
+
+  if info.auth
+    client.auth info.auth.split(":")[1]
+
   storage = new RedisStorage(client)
 
   # Read markov-specific configuration from the environment.

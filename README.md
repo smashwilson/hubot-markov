@@ -5,11 +5,11 @@ chat.
 
 ## Installing
 
-1. Add `hubot-markov-model` to your `package.json`:
+1. Add `hubot-markov` to your `package.json`:
 
 ```json
   "dependencies": {
-    "hubot-markov-model": "~1.2.0"
+    "hubot-markov": "~1.3.0"
   },
 ```
 
