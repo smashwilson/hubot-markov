@@ -46,6 +46,7 @@ module.exports = (robot) ->
   ply = process.env.HUBOT_MARKOV_PLY or 1
   min = process.env.HUBOT_MARKOV_LEARN_MIN or 1
   max = process.env.HUBOT_MARKOV_GENERATE_MAX or 50
+  pct = Number(process.env.HUBOT_MARKOV_RESPOND_CHANCE or 0)
 
   model = new MarkovModel(storage, ply, min)
 
@@ -55,7 +56,16 @@ module.exports = (robot) ->
     # Return on empty messages
     return if !msg.message.text
 
+    # Ignore messages sent by Hubot itself
+    return if msg.user.jid == process.env.HUBOT_HIPCHAT_JID
+
     model.learn msg.message.text
+
+    # Chance to randomly respond un-prompted
+    if pct > 0 and Math.random() < pct
+      seed = msg.message.text.match /\w+$/
+      model.generate seed[0] or '', max, (text) =>
+        msg.send text
 
   # Generate markov chains on demand, optionally seeded by some initial state.
   robot.respond /markov(\s+(.+))?$/i, (msg) ->
