@@ -55,6 +55,9 @@ module.exports = (robot) ->
     # Return on empty messages
     return if !msg.message.text
 
+    # Ignore messages sent by Hubot itself
+    return if msg.user.jid == process.env.HUBOT_HIPCHAT_JID
+
     model.learn msg.message.text
 
   # Generate markov chains on demand, optionally seeded by some initial state.
