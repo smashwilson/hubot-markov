@@ -31,7 +31,8 @@ RedisStorage = require './redis-storage'
 module.exports = (robot) ->
 
   # Configure redis the same way that redis-brain does.
-  info = Url.parse process.env.REDISTOGO_URL or
+  info = Url.parse process.env.REDIS_URL or
+    process.env.REDISTOGO_URL or
     process.env.REDISCLOUD_URL or
     process.env.BOXEN_REDIS_URL or
     'redis://localhost:6379'
