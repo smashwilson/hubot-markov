@@ -5,7 +5,7 @@ chat.
 
 ## Installing
 
-1. Add `hubot-markov` to your `package.json`:
+1. Add `hubot-markov` to your `package.json` with `npm install --save hubot-markov`:
 
 ```json
   "dependencies": {
