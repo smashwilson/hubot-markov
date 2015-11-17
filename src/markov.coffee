@@ -15,9 +15,12 @@
 #   HUBOT_MARKOV_PLY - Order of the markov model to build. Default: 1
 #   HUBOT_MARKOV_LEARN_MIN - Minimum number of tokens to use in training. Default: 1
 #   HUBOT_MARKOV_GENERATE_MAX - Maximum number of tokens in a generated chain. Default: 50
+#   HUBOT_MARKOV_NOREVERSE - Do not generate the reverse model.  Default: 0
 #
 # Commands:
 #   hubot markov <seed> - Generate a markov chain, optionally seeded with the provided phrase.
+#   hubot remarkov <seed> - Generate a reverse markov chain, optionally seeded
+#   hubot mmarkov <seed> - Generate two markov chains from the given (optional) seed
 #
 # Author:
 #   smashwilson
@@ -27,6 +30,11 @@ Redis = require 'redis'
 
 MarkovModel = require './model'
 RedisStorage = require './redis-storage'
+
+rephrase = (phrase) ->
+  # Straight from MarkovModel
+  words = (word for word in phrase.split /\s+/ when word.length > 0)
+  words.reverse().join(" ")
 
 module.exports = (robot) ->
 
@@ -41,15 +49,26 @@ module.exports = (robot) ->
   if info.auth
     client.auth info.auth.split(":")[1]
 
-  storage = new RedisStorage(client)
-
   # Read markov-specific configuration from the environment.
   ply = process.env.HUBOT_MARKOV_PLY or 1
   min = process.env.HUBOT_MARKOV_LEARN_MIN or 1
   max = process.env.HUBOT_MARKOV_GENERATE_MAX or 50
   pct = Number(process.env.HUBOT_MARKOV_RESPOND_CHANCE or 0)
+  # This logic is somewhat convoluted because it's a pain to
+  # default something to true, as 'or true' will override explicit
+  # false settings.  Default false is easier.
+  reverse_disabled = process.env.HUBOT_MARKOV_NOREVERSE or false
+  # Realistically HUBOT_MARKOV_NOREVERSE could be anything and coffeescript
+  # will treat it as truthy, so don't set it unless you intend to disable.
+
+  storage = new RedisStorage(client)
+  if !reverse_disabled
+    restorage = new RedisStorage(client, "remarkov:")
+  else
+    restorage = null
 
   model = new MarkovModel(storage, ply, min)
+  remodel = new MarkovModel(restorage, ply, min) if restorage
 
   # The robot hears ALL. You cannot run.
   robot.catchAll (msg) ->
@@ -58,6 +77,7 @@ module.exports = (robot) ->
     return if !msg.message.text
 
     model.learn msg.message.text
+    remodel.learn rephrase msg.message.text if remodel
 
     # Chance to randomly respond un-prompted
     if pct > 0 and Math.random() < pct
@@ -69,3 +89,28 @@ module.exports = (robot) ->
   robot.respond /markov(\s+(.+))?$/i, (msg) ->
     model.generate msg.match[2] or '', max, (text) =>
       msg.send text
+
+  if restorage
+    # Generate reverse markov chains on demand, optionally seeded by some end state
+    robot.respond /remarkov(\s+(.+))?$/i, (msg) ->
+
+      seed = msg.match[2] or ''
+      actualSeed = rephrase seed
+
+      remodel.generate actualSeed, max, (text) =>
+        msg.send rephrase text
+
+    # Generate markov chains with the seed in the middle
+    robot.respond /mmarkov(\s+(.+))?$/i, (msg) ->
+      seed = msg.match[2] or ''
+      model.generate seed, max, (right) ->
+        # If no seed was given, the backward seed will be the first word
+        # of the forward markov.
+        # Also, Javascript split, why you no act like python split?
+        seedAndRest = right.split /\s+/
+        seed = seedAndRest.shift()
+        rest = seedAndRest.join " "
+        # Arglebargle async
+        remodel.generate rephrase(seed), max, (left) ->
+          left = rephrase left
+          msg.send([left, rest].join " ")
