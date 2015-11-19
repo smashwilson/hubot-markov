@@ -1,9 +1,8 @@
 {
   "name": "hubot-markov",
   "description": "Build a markov model of everything Hubot hears.",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "author": "Ash Wilson <smashwilson@gmail.com>",
-
   "contributors": [
     {
       "name": "Ash Wilson",
@@ -22,38 +21,30 @@
       "email": "atiaxi@gmail.com"
     }
   ],
-
   "license": "MIT",
-
   "keywords": [
     "hubot",
     "hubot-scripts",
     "markov"
   ],
-
   "repository": {
     "type": "git",
     "url": "git://github.com/smashwilson/hubot-markov.git"
   },
-
   "bugs": {
     "url": "https://github.com/smashwilson/hubot-markov/issues"
   },
-
   "dependencies": {
     "coffee-script": "~1.6",
     "redis": "~0.9.1"
   },
-
   "devDependencies": {
     "mocha": "*",
     "chai": "*",
     "sinon-chai": "*",
     "sinon": "*"
   },
-
   "main": "index.coffee",
-
   "scripts": {
     "test": "script/test"
   }
