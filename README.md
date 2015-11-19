@@ -34,6 +34,8 @@ the phrase you give it. This command might output "your mother is a classy
 lady", for example. Remember: Hubot is an innocent soul, and what he says
 only acts as a mirror for everything in your hearts.
 
+`Hubot: remarkov` and `Hubot: mmarkov` are similar, but traverse node transitions in different directions: `remarkov` chains backwards from a given ending state, and `mmarkov` chains both forward and backward.
+
 ## Configuring
 
 The Hubot markov model can optionally be configured by four environment
