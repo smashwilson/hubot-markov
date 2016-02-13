@@ -15,6 +15,8 @@
 #   HUBOT_MARKOV_PLY - Order of the markov model to build. Default: 1
 #   HUBOT_MARKOV_LEARN_MIN - Minimum number of tokens to use in training. Default: 1
 #   HUBOT_MARKOV_GENERATE_MAX - Maximum number of tokens in a generated chain. Default: 50
+#   HUBOT_MARKOV_RESPOND_CHANCE - The probability, between 0.0 and 1.0, that Hubot will respond
+#      un-prompted to a message by using the last word in the message as the seed. Default: 0.
 #   HUBOT_MARKOV_NOREVERSE - Do not generate the reverse model.  Default: 0
 #   HUBOT_MARKOV_IGNORELIST - Comma-separated list of usernames to ignore.
 #
