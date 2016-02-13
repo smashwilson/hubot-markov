@@ -16,6 +16,7 @@
 #   HUBOT_MARKOV_LEARN_MIN - Minimum number of tokens to use in training. Default: 1
 #   HUBOT_MARKOV_GENERATE_MAX - Maximum number of tokens in a generated chain. Default: 50
 #   HUBOT_MARKOV_NOREVERSE - Do not generate the reverse model.  Default: 0
+#   HUBOT_MARKOV_IGNORELIST - Comma-separated list of usernames to ignore.
 #
 # Commands:
 #   hubot markov <seed> - Generate a markov chain, optionally seeded with the provided phrase.
@@ -61,6 +62,8 @@ module.exports = (robot) ->
   # Realistically HUBOT_MARKOV_NOREVERSE could be anything and coffeescript
   # will treat it as truthy, so don't set it unless you intend to disable.
 
+  ignoreList = (process.env.HUBOT_MARKOV_IGNORELIST or '').split /\s*,\s*/
+
   storage = new RedisStorage(client)
   if !reverse_disabled
     restorage = new RedisStorage(client, "remarkov:")
@@ -75,6 +78,9 @@ module.exports = (robot) ->
 
     # Return on empty messages
     return if !msg.message.text
+
+    # Disregard ignored usernames.
+    return if msg.message.user.name in ignoreList
 
     model.learn msg.message.text
     remodel.learn rephrase msg.message.text if remodel
