@@ -80,6 +80,9 @@ module.exports = (robot) ->
 
     # Return on empty messages
     return if !msg.message.text
+    # Return if message has url
+    return if msg.message.text.match /http:\/\//
+    return if msg.message.text.match /https:\/\//
 
     # Disregard ignored usernames.
     return if msg.message.user.name in ignoreList
@@ -97,6 +100,19 @@ module.exports = (robot) ->
   robot.respond /markov(\s+(.+))?$/i, (msg) ->
     model.generate msg.match[2] or '', max, (text) =>
       msg.send text
+
+  # Remove http and https links from model database
+  robot.respond /markov-removehttpkeys/, (msg) ->
+    client.keys "markov:*", (err, keys) ->
+      for key in keys
+
+        if String(key).match(/http:\/\//)
+          client.del(key)
+          console.log(key)
+        if String(key).match(/https:\/\//)
+          client.del(key)
+          console.log(key)
+    msg.send "HTTP removed from markov"
 
   if restorage
     # Generate reverse markov chains on demand, optionally seeded by some end state
