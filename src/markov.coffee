@@ -96,7 +96,9 @@ module.exports = (robot) ->
       randword = Math.floor(Math.random() * words.length)
       seed = words[randword]
       model.generate seed or '', max, (text) =>
-        msg.send text
+        res = text.match /\w+/g
+        if res.length > 2
+          msg.send text
 
   # Generate markov chains on demand, optionally seeded by some initial state.
   robot.respond /markov(\s+(.+))?$/i, (msg) ->
