@@ -93,9 +93,10 @@ module.exports = (robot) ->
     # Chance to randomly respond un-prompted
     if pct > 0 and Math.random() < pct
       words = msg.message.text.match /\w+/g
-      randword = Math.floor(Math.random() * words.length)
+      console.log(words[0])
+      randword = Math.floor(Math.random() * words.length + 1)
       seed = words[randword]
-      model.generate seed[0] or '', max, (text) =>
+      model.generate seed or '', max, (text) =>
         msg.send text
 
   # Generate markov chains on demand, optionally seeded by some initial state.
