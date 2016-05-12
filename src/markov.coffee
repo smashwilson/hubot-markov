@@ -92,7 +92,7 @@ module.exports = (robot) ->
 
     # Chance to randomly respond un-prompted
     if pct > 0 and Math.random() < pct
-      words = msg.message.text.match /(?=\s*)\w+(?=\s*)/g
+      words = msg.message.text.match /\w+/g
       randword = Math.floor(Math.random() * words.length)
       seed = words[randword]
       model.generate seed[0] or '', max, (text) =>
