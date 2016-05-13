@@ -95,10 +95,20 @@ module.exports = (robot) ->
       words = msg.message.text.match /\w+/g
       randword = Math.floor(Math.random() * words.length)
       seed = words[randword]
-      model.generate seed or '', max, (text) =>
-        res = text.match /\w+/g
-        if res.length > 2
-          msg.send text
+      if restorage
+        model.generate seed, max, (right) ->
+          seedAndRest = right.split /\s+/
+          seed = seedAndRest.shift()
+          rest = seedAndRest.join " "
+          # Arglebargle async
+          remodel.generate rephrase(seed), max, (left) ->
+            left = rephrase left
+            msg.send([left, rest].join " ")
+      else
+        model.generate seed or '', max, (text) =>
+          res = text.match /\w+/g
+          if res.length > 2
+            msg.send text
 
   # Generate markov chains on demand, optionally seeded by some initial state.
   robot.respond /markov(\s+(.+))?$/i, (msg) ->
