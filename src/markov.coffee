@@ -32,57 +32,55 @@ Url = require 'url'
 Redis = require 'redis'
 
 MarkovModel = require './model'
-RedisStorage = require './redis-storage'
+storageMap = require './storage'
 
 rephrase = (phrase) ->
   # Straight from MarkovModel
   words = (word for word in phrase.split /\s+/ when word.length > 0)
   words.reverse().join(" ")
 
+parseBool = (v, def) ->
+  return def unless v? # Undefined or null
+  return false unless v.length > 0
+  return false unless v.toLowerCase() in ['1', 't', 'true', 'y', 'yes']
+  true
+
 module.exports = (robot) ->
 
-  # Configure redis the same way that redis-brain does.
-  info = Url.parse process.env.REDISTOGO_URL or
-    process.env.REDISCLOUD_URL or
-    process.env.BOXEN_REDIS_URL or
-    process.env.REDIS_URL or
-    'redis://localhost:6379'
-  client = Redis.createClient(info.port, info.hostname)
-
-  if info.auth
-    client.auth info.auth.split(":")[1]
-
   # Read markov-specific configuration from the environment.
-  ply = process.env.HUBOT_MARKOV_PLY or 1
-  min = process.env.HUBOT_MARKOV_LEARN_MIN or 1
-  max = process.env.HUBOT_MARKOV_GENERATE_MAX or 50
-  pct = Number(process.env.HUBOT_MARKOV_RESPOND_CHANCE or 0)
-  # This logic is somewhat convoluted because it's a pain to
-  # default something to true, as 'or true' will override explicit
-  # false settings.  Default false is easier.
-  reverse_disabled = process.env.HUBOT_MARKOV_NOREVERSE or false
-  # Realistically HUBOT_MARKOV_NOREVERSE could be anything and coffeescript
-  # will treat it as truthy, so don't set it unless you intend to disable.
+  ply = parseInt(process.env.HUBOT_MARKOV_PLY or 1)
+  min = parseInt(process.env.HUBOT_MARKOV_LEARN_MIN or 1)
+  max = parseInt(process.env.HUBOT_MARKOV_GENERATE_MAX or 50)
+  pct = parseInt(process.env.HUBOT_MARKOV_RESPOND_CHANCE or 0)
+  reverseDisabled = parseBool(process.env.HUBOT_MARKOV_NOREVERSE, false)
+
+  includeUrls = parseBool(process.env.HUBOT_MARKOV_INCLUDE_URLS, false)
 
   ignoreList = (process.env.HUBOT_MARKOV_IGNORELIST or '').split /\s*,\s*/
 
-  storage = new RedisStorage(client)
-  if !reverse_disabled
-    restorage = new RedisStorage(client, "remarkov:")
-  else
-    restorage = null
+  storageKind = process.env.HUBOT_MARKOV_STORAGE or 'memory'
+  storageUrl = process.env.HUBOT_MARKOV_STORAGE_URL
+
+  StorageImpl = storageMap[storageKind]
+  unless StorageImpl?
+    robot.logger.error "Invalid HUBOT_MARKOV_STORAGE: #{storageKind}.
+      Choose from: #{Object.keys(storageMap).join ', '}"
+    throw new Error('Invalid HUBOT_MARKOV_STORAGE')
+
+  storage = new StorageImpl(storageUrl, 'markov:')
+  restorage = new StorageImpl(storageUrl, 'remarkov:') unless restorageDisabled
 
   model = new MarkovModel(storage, ply, min)
-  remodel = new MarkovModel(restorage, ply, min) if restorage
+  remodel = new MarkovModel(restorage, ply, min) unless restorageDisabled
 
   # The robot hears ALL. You cannot run.
   robot.catchAll (msg) ->
 
     # Return on empty messages
     return if !msg.message.text
-    # Return if message has url
-    return if msg.message.text.match /http:\/\//
-    return if msg.message.text.match /https:\/\//
+
+    # Return if message containers a URL
+    return if !includeUrls and msg.message.text.match /https?:\/\//
 
     # Disregard ignored usernames.
     return if msg.message.user.name in ignoreList

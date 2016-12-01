@@ -1,9 +1,24 @@
+Redis = require 'redis'
+Url = require 'url'
+
 # Markov storage implementation that uses redis hash keys to store the model.
 class RedisStorage
 
   # Create a storage module that uses the provided Redis connection.
   # Keypreifx used to isolate stored markov transitions from other keys in the database.
-  constructor: (@client, @keyprefix = "markov:") ->
+  constructor: (@connStr, @keyPrefix = "markov:") ->
+      # Configure redis the same way that redis-brain does.
+      info = Url.parse @connStr or
+        process.env.REDISTOGO_URL or
+        process.env.REDISCLOUD_URL or
+        process.env.BOXEN_REDIS_URL or
+        process.env.REDIS_URL or
+        'redis://localhost:6379'
+
+      @client = Redis.createClient(info.port, info.hostname)
+
+      if info.auth
+        @client.auth info.auth.split(":")[1]
 
   # Uniformly and unambiguously convert an array of Strings and nulls into a valid
   # Redis key. Uses a length-prefixed encoding.
@@ -13,7 +28,7 @@ class RedisStorage
   _encode: (key) ->
     encoded = for part in key
       if part then "#{part.length}#{part}" else "0"
-    @keyprefix + encoded.join('')
+    @keyPrefix + encoded.join('')
 
   # Record a transition within the model. "transition.from" is an array of Strings and
   # nulls marking the prior state and "transition.to" is the observed next state, which
