@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "coffee-script": "~1.6",
+    "pg": "^6.1.0",
     "redis": "~0.9.1"
   },
   "devDependencies": {
