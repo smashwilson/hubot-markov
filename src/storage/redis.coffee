@@ -34,12 +34,13 @@ class RedisStorage
       if part then "#{part.length}#{part}" else "0"
     @keyPrefix + encoded.join('')
 
-  # Record a transition within the model. "transition.from" is an array of Strings and
-  # nulls marking the prior state and "transition.to" is the observed next state, which
+  # Record a set of transitions within the model. "transition.from" is an array of Strings
+  # and nulls marking the prior state and "transition.to" is the observed next state, which
   # may be an end-of-chain sentinel.
-  increment: (transition, callback) ->
-    @client.hincrby(@._encode(transition.from), transition.to, 1)
-    callback(null)
+  incrementTransitions: (transitions, callback) ->
+    for transition in transitions
+      @client.hincrby(@._encode(transition.from), transition.to, 1)
+    process.nextTick callback
 
   # Retrieve an object containing the possible next hops from a prior state and their
   # relative frequencies. Invokes "callback" with the object.

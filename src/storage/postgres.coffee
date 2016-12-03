@@ -21,16 +21,22 @@ class PostgresStorage
          CONSTRAINT #{@constraintName} PRIMARY KEY (from, to))"
     @pool.query statement, callback
 
-  # Record a transition within the model. "transition.from" is an array of Strings and
-  # nulls marking the prior state and "transition.to" is the observed next state, which
+  # Record a set of transitions within the model. "transition.from" is an array of Strings
+  # and nulls marking the prior state and "transition.to" is the observed next state, which
   # may be an end-of-chain sentinel.
-  increment: (transition, callback) ->
+  incrementTransitions: (transitions, callback) ->
+    placeholders = ("($#{i * 2 - 1}, $#{i * 2}, 1)" for i in [1..transitions.length]).join ', '
+    values = []
+    for transition in transitions
+      values.push transition.from.join ' '
+      values.push transition.to
+
     options =
       text: """
-        INSERT INTO #{@modelName} (from, to, frequency) VALUES ($1, $2, 1)
-        ON CONFLICT #{@constraintName} UPDATE SET frequency=#{@modelName}.frequency + 1
+        INSERT INTO #{@modelName} (from, to, frequency) VALUES #{placeholders}
+        ON CONFLICT #{@constraintName} UPDATE SET frequency = frequency + 1
         """
-      values: [transition.from.join(' '), transition.to]
+      values: values
     @pool.query options, callback
 
   # Retrieve an object containing the possible next hops from a prior state and their

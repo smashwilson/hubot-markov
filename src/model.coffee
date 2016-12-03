@@ -56,13 +56,14 @@ class MarkovModel
   # Add a phrase to the model. Increments the frequency of each @ply-order
   # state transition extracted from the phrase. Ignores any phrases containing
   # less than @min words.
-  learn: (phrase) ->
+  learn: (phrase, callback) ->
     words = @._words(phrase)
 
     # Ignore phrases with fewer than the minimum words.
-    return if words.length < @min
+    if words.length < @min
+      return process.nextTick callback
 
-    @storage.increment(t) for t in @._transitions(words)
+    @storage.incrementTransitions(t for t in @._transitions(words), callback)
 
   # Generate random text based on the current state of the model and invokes
   # "callback" with it. The generated text will begin with "seed" and contain
