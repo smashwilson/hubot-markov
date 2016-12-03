@@ -17,7 +17,7 @@ class PostgresStorage
   # Ensure that this model's table exists.
   initialize: (callback) ->
     statement = "CREATE TABLE IF NOT EXISTS #{@modelName}
-        (from TEXT[], to TEXT, frequency INTEGER,
+        (from TEXT, to TEXT, frequency INTEGER,
          CONSTRAINT #{@constraintName} PRIMARY KEY (from, to))"
     @pool.query statement, callback
 
@@ -28,10 +28,9 @@ class PostgresStorage
     options =
       text: """
         INSERT INTO #{@modelName} (from, to, frequency) VALUES ($1, $2, 1)
-        ON CONFLICT #{@constraintName} UPDATE SET
-        to = excluded.to, frequency=#{@modelName}.frequency + 1
+        ON CONFLICT #{@constraintName} UPDATE SET frequency=#{@modelName}.frequency + 1
         """
-      values: [transition.from, transition.to]
+      values: [transition.from.join(' '), transition.to]
     @pool.query options, callback
 
   # Retrieve an object containing the possible next hops from a prior state and their
@@ -39,7 +38,7 @@ class PostgresStorage
   get: (prior, callback) ->
     options =
       text: "SELECT to, frequency FROM #{@modelName} WHERE from = $1"
-      values: [prior]
+      values: [prior.join ' ']
     @pool.query options, (err, result) ->
       return callback(err) if err?
 
