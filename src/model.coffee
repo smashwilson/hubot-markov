@@ -14,14 +14,14 @@ class MarkovModel
   _words: (phrase) ->
     (word for word in phrase.split /\s+/ when word.length > 0)
 
-  # Generate a uniformly distributed random number between 0 and max, inclusive.
+  # Generate a uniformly distributed random number between 0 and max.
   _random: (max) ->
-    Math.floor(Math.random() * (max + 1))
+    Math.random() * max
 
   # Given an object with possible choices as keys and relative frequencies as values,
   # choose a key with probability proportional to its frequency.
   _chooseWeighted: (choices) ->
-    return sentinel unless choices
+    return MarkovModel.sentinel unless choices? and choices.length isnt 0
 
     # Sum the frequencies of the available choices and choose a value within that
     # range.
@@ -37,7 +37,7 @@ class MarkovModel
       return key if chosen <= acc
 
     # If we get here, "chosen" was greater than total.
-    throw "Bad choice: #{chosen} from #{total}"
+    throw new Error("Bad choice: #{chosen} from #{total}")
 
   # Generate each state transition of order @ply among "words". For example,
   # with @ply 2 and a phrase ["a", "b", "c", "d"], this would generate:
