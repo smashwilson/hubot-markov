@@ -16,7 +16,7 @@ class MemoryStorage
     for transition in transitions
       key = transition.from.join(' ')
       hops = (@transitions[key] ?= {})
-      prior = hops[transition.to] or 1
+      prior = hops[transition.to] or 0
       hops[transition.to] = prior + 1
     process.nextTick callback
 
