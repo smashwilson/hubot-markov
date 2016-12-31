@@ -3,7 +3,7 @@
 class MarkovModel
 
   # Chain termination marker; chosen because _words will never contain whitespace.
-  sentinel = ' '
+  @sentinel = ' '
 
   # Build a new model with the provided storage backend and order. A markov model's
   # order is the number of prior states that will be examined to determine the
@@ -42,16 +42,17 @@ class MarkovModel
   # Generate each state transition of order @ply among "words". For example,
   # with @ply 2 and a phrase ["a", "b", "c", "d"], this would generate:
   #
-  # { from: [null, null] to: 'a' }
-  # { from: [null, 'a'] to: 'b' }
+  # { from: [' ', ' '] to: 'a' }
+  # { from: [' ', 'a'] to: 'b' }
   # { from: ['a', 'b'], to: 'c' }
   # { from: ['b', 'c'], to: 'd' }
   # { from: ['c', 'd'], to: ' ' }
+  # { from: ['d', ' '], to: ' ' }
   _transitions: (words) ->
-    words.unshift null for i in [1..@ply]
-    words.push null for i in [1..@ply]
+    words.unshift MarkovModel.sentinel for i in [1..@ply]
+    words.push MarkovModel.sentinel for i in [1..@ply]
     for i in [0..words.length - @ply - 1]
-      { from: words.slice(i, i + @ply), to: words[i + @ply] or sentinel }
+      { from: words.slice(i, i + @ply), to: words[i + @ply] or MarkovModel.sentinel }
 
   # Add a phrase to the model. Increments the frequency of each @ply-order
   # state transition extracted from the phrase. Ignores any phrases containing
@@ -74,7 +75,7 @@ class MarkovModel
     # Create the initial storage key from "seed", if one is provided.
     key = words.slice(words.length - @ply, words.length)
     if key.length < @ply
-      key.unshift null for i in [1..@ply - key.length]
+      key.unshift MarkovModel.sentinel for i in [1..@ply - key.length]
 
     # Initialize the response chain with the seed.
     chain = []
