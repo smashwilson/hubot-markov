@@ -88,10 +88,12 @@ class MarkovModel
   # weighted by frequencies, and pushes it onto the chain. If the chain is complete,
   # invokes the callback and lets the call stack unwind.
   _generate_more: (key, chain, max, callback) ->
-    @storage.get key, (choices) =>
+    @storage.get key, (err, choices) =>
+      return callback(err) if err?
+
       next = @._chooseWeighted choices
-      if next is sentinel or max <= 0
-        callback(chain.join(' '))
+      if next is MarkovModel.sentinel or max <= 0
+        callback(null, chain.join(' '))
       else
         chain.push next
 
