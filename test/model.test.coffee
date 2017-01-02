@@ -31,7 +31,7 @@ describe 'MarkovModel', ->
   else
     it 'should be tested with a Postgres database at ${DATABASE_URL}'
 
-  for storageClass in storageClasses
+  generate = (storageClass) ->
     describe "with #{storageClass.name} storage", ->
       [storage, model] = []
 
@@ -242,3 +242,5 @@ describe 'MarkovModel', ->
               expect(err).to.not.exist
               expect(results.every (r) -> r is '1 2 3 4')
               done()
+
+  generate(storageClass) for storageClass in storageClasses
