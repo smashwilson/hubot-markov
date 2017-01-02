@@ -20,12 +20,16 @@ describe 'MarkovModel', ->
       name: 'Redis'
       constructor: storage.redis
       connStr: process.env.REDIS_URL
+  else
+    it 'should be tested with a redis URL as ${REDIS_URL}'
 
   if process.env.DATABASE_URL?
     storageClasses.push
       name: 'Postgres'
       constructor: storage.postgres
       connStr: process.env.DATABASE_URL
+  else
+    it 'should be tested with a Postgres database at ${DATABASE_URL}'
 
   for storageClass in storageClasses
     describe "with #{storageClass.name} storage", ->
