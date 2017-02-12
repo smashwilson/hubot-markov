@@ -9,10 +9,12 @@ class MarkovModel
   # order is the number of prior states that will be examined to determine the
   # probabilities of the next state.
   constructor: (@storage, @ply, @min) ->
+    @preprocess = (input) -> input
 
-  # Split a line of text into whitespace-separated, nonempty words.
-  _words: (phrase) ->
-    (word for word in phrase.split /\s+/ when word.length > 0)
+  # Use a function to transform input presented to the model in .learn() before it's presented to
+  # storage. The function's input will be the argument to learn() and its output is expected to be
+  # an Array of states in sequence.
+  preprocessWith: (@preprocess) ->
 
   # Generate a uniformly distributed random number between 0 and max.
   _random: (max) ->
@@ -48,38 +50,38 @@ class MarkovModel
   # { from: ['b', 'c'], to: 'd' }
   # { from: ['c', 'd'], to: ' ' }
   # { from: ['d', ' '], to: ' ' }
-  _transitions: (words) ->
-    words.unshift MarkovModel.sentinel for i in [1..@ply]
-    words.push MarkovModel.sentinel for i in [1..@ply]
-    for i in [0..words.length - @ply - 1]
-      { from: words.slice(i, i + @ply), to: words[i + @ply] or MarkovModel.sentinel }
+  _transitions: (states) ->
+    states.unshift MarkovModel.sentinel for i in [1..@ply]
+    states.push MarkovModel.sentinel for i in [1..@ply]
+    for i in [0..states.length - @ply - 1]
+      { from: states.slice(i, i + @ply), to: states[i + @ply] or MarkovModel.sentinel }
 
   # Add a phrase to the model. Increments the frequency of each @ply-order
   # state transition extracted from the phrase. Ignores any phrases containing
   # less than @min words.
-  learn: (phrase, callback) ->
-    words = @._words(phrase)
+  learn: (input, callback) ->
+    states = @preprocess(input)
 
     # Ignore phrases with fewer than the minimum words.
-    if words.length < @min
+    if states.length < @min
       return process.nextTick callback
 
-    @storage.incrementTransitions(t for t in @._transitions(words), callback)
+    @storage.incrementTransitions(t for t in @._transitions(states), callback)
 
   # Generate random text based on the current state of the model and invokes
   # "callback" with it. The generated text will begin with "seed" and contain
   # at most "max" words.
   generate: (seed, max, callback) ->
-    words = @._words(seed)
+    states = @preprocess(seed)
 
     # Create the initial storage key from "seed", if one is provided.
-    key = words.slice(words.length - @ply, words.length)
+    key = states.slice(states.length - @ply, states.length)
     if key.length < @ply
       key.unshift MarkovModel.sentinel for i in [1..@ply - key.length]
 
     # Initialize the response chain with the seed.
     chain = []
-    chain.push words...
+    chain.push states...
 
     @._generate_more key, chain, max, callback
 
@@ -93,7 +95,7 @@ class MarkovModel
 
       next = @._chooseWeighted choices
       if next is MarkovModel.sentinel or max <= 0
-        callback(null, chain.join(' '))
+        callback(null, chain)
       else
         chain.push next
 

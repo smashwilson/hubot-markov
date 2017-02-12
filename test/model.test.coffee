@@ -41,22 +41,6 @@ describe 'MarkovModel', ->
           model = new MarkovModel(storage, 2, 3)
           done()
 
-      describe '_words()', ->
-        it 'splits a line of text into whitespace-separated, nonempty words', ->
-          ws = model._words 'this is a line of text'
-          expect(ws).to.deep.equal ['this', 'is', 'a', 'line', 'of', 'text']
-
-        it 'ignores repeated whitespace', ->
-          ws = model._words "separated   by    \n\r lots   of  whitespace"
-          expect(ws).to.deep.equal ['separated', 'by', 'lots', 'of', 'whitespace']
-
-        it 'ignores leading and trailing whitespace', ->
-          ws = model._words "   with leading and trailing   "
-          expect(ws).to.deep.equal ['with', 'leading', 'and', 'trailing']
-
-        it 'returns an empty list for an empty line of text', ->
-          expect(model._words '').to.deep.equal []
-
       describe '_chooseWeighted()', ->
         it 'returns the sentinel value if there are no choices', ->
           choice = model._chooseWeighted []
@@ -122,8 +106,8 @@ describe 'MarkovModel', ->
           ]
 
       describe 'learn()', ->
-        it 'records each transition in the whitespace-separated phrase', (done) ->
-          model.learn 'aaa  bbbb ccc  dddddd  eee z ', ->
+        it 'records each transition in state sequence', (done) ->
+          model.learn ['aaa', 'bbbb', 'ccc', 'dddddd', 'eee', 'z'], ->
             async.parallel [
               (cb) -> storage.get([SENTINEL, SENTINEL], cb) # 0
               (cb) -> storage.get([SENTINEL, 'aaa'], cb) # 1
@@ -149,7 +133,7 @@ describe 'MarkovModel', ->
               done()
 
         it 'ignores phrases with fewer than @min words', (done) ->
-          model.learn 'aaa bbb', ->
+          model.learn ['aaa', 'bbb'], ->
             async.parallel [
               (cb) -> storage.get([SENTINEL, SENTINEL], cb) # 0
               (cb) -> storage.get([SENTINEL, 'aaa'], cb) # 1
@@ -164,7 +148,7 @@ describe 'MarkovModel', ->
               done()
 
         it 'does nothing for an empty list', (done) ->
-          model.learn '', ->
+          model.learn [], ->
             storage.get [SENTINEL, SENTINEL], (err, result) ->
               expect(err).to.not.exist
               expect(result).to.deep.equal({})
@@ -194,9 +178,9 @@ describe 'MarkovModel', ->
             ITERATION_COUNT = 10000
 
             generate = (n, cb) ->
-              model.generate '', 10, (err, phrase) ->
+              model.generate [], 10, (err, states) ->
                 expect(err).to.not.exist
-                occurrences[phrase]++
+                occurrences[states.join ' ']++
                 cb()
             async.times ITERATION_COUNT, generate, (err) ->
               expect(err).to.not.exist
@@ -215,9 +199,9 @@ describe 'MarkovModel', ->
           ], (err) ->
             expect(err).to.not.exist
 
-            model.generate '', 3, (err, phrase) ->
+            model.generate [], 3, (err, states) ->
               expect(err).to.not.exist
-              expect(phrase).to.equal 'a b c'
+              expect(states).to.deep.equal ['a', 'b', 'c']
               done()
 
         it 'uses a seed to begin the generated phrase', (done) ->
@@ -237,10 +221,10 @@ describe 'MarkovModel', ->
           ], (err) ->
             expect(err).to.not.exist
 
-            generate = (n, cb) -> model.generate '1 2', 10, cb
+            generate = (n, cb) -> model.generate ['1', '2'], 10, cb
             async.times 100, generate, (err, results) ->
               expect(err).to.not.exist
-              expect(results.every (r) -> r is '1 2 3 4')
+              expect(results.every (r) -> r.join(' ') is '1 2 3 4')
               done()
 
   generate(storageClass) for storageClass in storageClasses

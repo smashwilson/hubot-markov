@@ -6,7 +6,9 @@ class RedisStorage
 
   # Create a storage module connected to Redis.
   # Key prefix is used to isolate stored markov transitions from other keys in the database.
-  constructor: (@connStr, @keyPrefix = "markov:") ->
+  constructor: (@connStr, modelName = "markov") ->
+      @keyPrefix = "#{modelName}:"
+
       # Configure redis the same way that redis-brain does.
       info = Url.parse @connStr or
         process.env.REDISTOGO_URL or
