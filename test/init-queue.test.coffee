@@ -21,14 +21,16 @@ describe 'InitQueue', ->
       q.accept (r) -> calls.push {callback: 2, resource: r}
       q.accept (r) -> calls.push {callback: 3, resource: r}
 
-    it 'fires all accumulated callbacks', ->
+    it 'fires all accumulated callbacks asynchronously', (done) ->
       q.ready('the thing')
 
-      expect(calls).to.deep.equal [
-        {callback: 1, resource: 'the thing'}
-        {callback: 2, resource: 'the thing'}
-        {callback: 3, resource: 'the thing'}
-      ]
+      q.accept ->
+        expect(calls).to.deep.equal [
+          {callback: 1, resource: 'the thing'}
+          {callback: 2, resource: 'the thing'}
+          {callback: 3, resource: 'the thing'}
+        ]
+        done()
 
     it 'fires new callbacks on the next tick', (done) ->
       q.ready('a thing')

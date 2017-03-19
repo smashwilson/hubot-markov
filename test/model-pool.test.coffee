@@ -29,16 +29,26 @@ describe 'ModelPool', ->
     it 'validates storage kind', ->
       fn = ->
         pool.createModel 'thename', {storage: 'quantum'}
-      expect(fn).to.throw(/quantum/)
+      expect(fn).to.throw /quantum/
+
+    it 'throws on attempt to access a nonexistent model', ->
+      fn = ->
+        pool.modelNamed 'thename', () ->
+      expect(fn).to.throw /Unrecognized/
 
   describe 'with an existing model', ->
+    [existingModel] = []
+
     beforeEach (done) ->
-      pool.createModel 'existing', {}, -> done()
+      pool.createModel 'existing', {}, (model) ->
+        existingModel = model
+        done()
 
     it 'allows the creation of differently named models', (done) ->
       pool.createModel 'different', {}, (model) ->
         expect(model.ply).to.equal c.ply
         expect(model.min).to.equal c.learnMin
+        expect(model).not.to.equal existingModel
 
         done()
 
@@ -52,3 +62,18 @@ describe 'ModelPool', ->
       fn = ->
         pool.createModel 'another', {}
       expect(fn).to.throw /duplicate/
+
+    it 'permits access to the created model', (done) ->
+      pool.modelNamed 'existing', (model) ->
+        expect(model).to.equal existingModel
+        done()
+
+    it 'permits asynchronous access to models being initialized', (done) ->
+      called = false
+
+      pool.createModel 'another', {}
+      pool.modelNamed 'another', ->
+        called = true
+        done()
+
+      expect(called).to.be.false

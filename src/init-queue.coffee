@@ -10,7 +10,8 @@ class ReadyState
   constructor: (@payload) ->
 
   activate: (@q) ->
-    callback(@payload) for callback in @q.callbacks
+    process.nextTick =>
+      callback(@payload) for callback in @q.callbacks
 
   accept: (callback) ->
     process.nextTick =>
