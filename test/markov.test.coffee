@@ -15,7 +15,7 @@ describe 'the catchAll() listener', ->
   describe 'with default settings', ->
     beforeEach (done) -> room.robot.configure {}, done
 
-    it.only 'stores text in the default model', (done) ->
+    it 'stores text in the default model', (done) ->
       room.user.say('me', 'aaa bbb ccc')
       .then ->
         expect(room.messages).to.deep.equal [
