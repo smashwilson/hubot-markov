@@ -60,7 +60,7 @@ class MarkovModel
   # Add a phrase to the model. Increments the frequency of each @ply-order
   # state transition extracted from the phrase. Ignores any phrases containing
   # less than @min words.
-  learn: (input, callback) ->
+  learn: (input, callback = ->) ->
     states = @processor.pre(input)
 
     # Ignore phrases with fewer than the minimum words.

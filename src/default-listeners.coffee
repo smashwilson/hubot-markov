@@ -3,7 +3,7 @@
 # If configured to do so, randomly respond to arbitrary messages with a
 # markov string generated from a word from that message.
 
-preprocessor = require './preprocessor'
+processors = require './processors'
 
 module.exports = (robot, config) ->
   activeModelNames = []
@@ -21,10 +21,8 @@ module.exports = (robot, config) ->
       robot.markov.generateForward msg.match[2] or '', (text) -> msg.send text
 
   if config.reverseModel
-    reverseWords = (input) -> preprocessor.reverse(preprocessor.words(input))
-
     robot.markov.createModel 'default_reverse', {}, (model) ->
-      model.preprocessWith reverseWords
+      model.processWith processors.reverseWords
 
     activeModelNames.push 'default_reverse'
 
@@ -70,7 +68,7 @@ module.exports = (robot, config) ->
       return if !config.includeUrls and msg.message.text.match /https?:\/\//
 
       # Disregard ignored usernames.
-      return if msg.message.user.name in settings.ignoreList
+      return if msg.message.user.name in config.ignoreList
 
       # Pass the message to each active model.
       for name in activeModelNames

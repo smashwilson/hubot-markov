@@ -22,7 +22,7 @@
 #   HUBOT_MARKOV_DEFAULT_MODEL - Generate the default model, which learns word
 #     transitions from all text. Default: true.
 #   HUBOT_MARKOV_REVERSE_MODEL - Generate the reverse model.  Default: true
-#   HUBOT_MARKOV_IGNORELIST - Comma-separated list of usernames to ignore from the
+#   HUBOT_MARKOV_IGNORE_LIST - Comma-separated list of usernames to ignore from the
 #      default and reverse models.
 #   HUBOT_MARKOV_RESPOND_CHANCE - The probability, between 0.0 and 1.0, that Hubot will respond
 #      un-prompted to a message by using the last word in the message as the seed. Default: 0.
