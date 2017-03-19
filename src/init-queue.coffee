@@ -4,7 +4,6 @@ class AccumulateState
 
   accept: (callback) ->
     @q.callbacks.push(callback)
-    process.nextTick(andThen)
 
 class ReadyState
 
@@ -13,7 +12,9 @@ class ReadyState
   activate: (@q) ->
     callback(@payload) for callback in @q.callbacks
 
-  accept: (callback) -> callback(@payload)
+  accept: (callback) ->
+    process.nextTick =>
+      callback(@payload)
 
 class NoopState
 
