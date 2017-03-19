@@ -36,19 +36,21 @@ stringSetting = (hash, key, def) ->
   hash[key]
 
 module.exports = (hash) ->
-  if hash.HUBOT_MARKOV_REVERSE?
-    reverse = boolSetting(hash, 'HUBOT_MARKOV_REVERSE', true)
-  else
-    reverse = not boolSetting(hash, 'HUBOT_MARKOV_NOREVERSE', false)
+  if hash.HUBOT_MARKOV_NOREVERSE?
+    console.error "hubot-markov: Using removed option HUBOT_MARKOV_NOREVERSE."
+    console.error "hubot-markov: Please set HUBOT_MARKOV_REVERSE_MODEL instead."
+
+    hash.HUBOT_MARKOV_REVERSE_MODEL = boolSetting(hash, 'HUBOT_MARKOV_NOREVERSE', false).toString()
 
   return {
     ply: intSetting(hash, 'HUBOT_MARKOV_PLY', 1)
     learnMin: intSetting(hash, 'HUBOT_MARKOV_LEARN_MIN', 1)
     generateMax: intSetting(hash, 'HUBOT_MARKOV_GENERATE_MAX', 50)
-    respondChance: intSetting(hash, 'HUBOT_MARKOV_RESPOND_CHANCE', 0)
-    reverse: reverse
-    includeUrls: boolSetting(hash, 'HUBOT_MARKOV_INCLUDE_URLS', false)
-    ignoreList: listSetting(hash, 'HUBOT_MARKOV_IGNORE_LIST', [])
     storageKind: enumSetting(hash, 'HUBOT_MARKOV_STORAGE', Object.keys(storageMap), 'redis')
     storageUrl: stringSetting(hash, 'HUBOT_MARKOV_STORAGE_URL', null)
+    respondChance: intSetting(hash, 'HUBOT_MARKOV_RESPOND_CHANCE', 0)
+    defaultModel: boolSetting(hash, 'HUBOT_MARKOV_DEFAULT_MODEL', true)
+    reverseModel: boolSetting(hash, 'HUBOT_MARKOV_REVERSE_MODEL', true)
+    includeUrls: boolSetting(hash, 'HUBOT_MARKOV_INCLUDE_URLS', false)
+    ignoreList: listSetting(hash, 'HUBOT_MARKOV_IGNORE_LIST', [])
   }
