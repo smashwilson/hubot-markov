@@ -27,7 +27,7 @@ describe 'config', ->
   describe 'boolean settings', ->
     generate = (settingValue, expectedOutput) ->
       it "accepts '#{settingValue}' as #{expectedOutput}", ->
-        expect(config({HUBOT_MARKOV_REVERSE: settingValue}).reverse).to.equal(expectedOutput)
+        expect(config({HUBOT_MARKOV_REVERSE_MODEL: settingValue}).reverseModel).to.equal(expectedOutput)
 
     for positive in ['true', 't', 'yes', 'y', '1']
       for eachCase in [positive, positive.toUpperCase()]
@@ -39,25 +39,17 @@ describe 'config', ->
 
     it 'throws an error on unrecognized input', ->
       expect ->
-        config {HUBOT_MARKOV_REVERSE: '47'}
-      .to.throw /HUBOT_MARKOV_REVERSE must be 'true' or 'false'/
+        config {HUBOT_MARKOV_REVERSE_MODEL: '47'}
+      .to.throw /HUBOT_MARKOV_REVERSE_MODEL must be 'true' or 'false'/
 
     it 'falls back to the default on a missing key', ->
-      expect(config({}).reverse).to.be.true
+      expect(config({}).reverseModel).to.be.true
 
     it 'falls back to the default on an empty key', ->
-      expect(config({HUBOT_MARKOV_REVERSE: ''}).reverse).to.be.true
+      expect(config({HUBOT_MARKOV_REVERSE_MODEL: ''}).reverseModel).to.be.true
 
     it 'can default to "false"', ->
       expect(config({HUBOT_MARKOV_INCLUDE_URLS: ''}).includeUrls).to.be.false
-
-    it 'accepts _NOREVERSE if _REVERSE is unspecified', ->
-      settings = config {HUBOT_MARKOV_NOREVERSE: 'yes'}
-      expect(settings.reverse).to.be.false
-
-    it 'ignores _NOREVERSE if _REVERSE is specified', ->
-      settings = config {HUBOT_MARKOV_NOREVERSE: 'no', HUBOT_MARKOV_REVERSE: 'false'}
-      expect(settings.reverse).to.be.false
 
   describe 'list settings', ->
     it 'accepts a comma-delimited list', ->
