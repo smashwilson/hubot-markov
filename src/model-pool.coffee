@@ -23,7 +23,7 @@ class ModelPool
   #  min [Number] - Minimum number of states required in a chain before its transitions are
   #    learned. Optional; defaults to HUBOT_MARKOV_LEARN_MIN.
   #
-  createModel: (name, options) ->
+  createModel: (name, options, callback) ->
     if @byName[name]?
       throw new Error("Attempt to create duplicate markov model: #{name}")
 
@@ -49,7 +49,7 @@ class ModelPool
       model = new MarkovModel(storage, ply, min)
       queue.ready model
 
-    return queue
+    queue.accept(callback) if callback?
 
   # Invoke a callback with a `MarkovModel` when it eventually becomes available.
   #
@@ -62,3 +62,5 @@ class ModelPool
     unless queue?
       throw new Error("Unrecognized model name #{name}.")
     queue.accept callback
+
+module.exports = ModelPool
