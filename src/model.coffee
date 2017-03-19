@@ -1,3 +1,5 @@
+processors = require './processors'
+
 # A markov model backed by a configurably storage engine that can both learn and
 # generate random text.
 class MarkovModel
@@ -9,12 +11,11 @@ class MarkovModel
   # order is the number of prior states that will be examined to determine the
   # probabilities of the next state.
   constructor: (@storage, @ply, @min) ->
-    @preprocess = (input) -> input
+    @processor = processors.words
 
-  # Use a function to transform input presented to the model in .learn() before it's presented to
-  # storage. The function's input will be the argument to learn() and its output is expected to be
-  # an Array of states in sequence.
-  preprocessWith: (@preprocess) ->
+  # Use a pair of functions to transform input presented to the model in .learn()
+  # before it's presented to storage and tokens returned by .generate().
+  processWith: (@processor) ->
 
   # Generate a uniformly distributed random number between 0 and max.
   _random: (max) ->
@@ -60,7 +61,7 @@ class MarkovModel
   # state transition extracted from the phrase. Ignores any phrases containing
   # less than @min words.
   learn: (input, callback) ->
-    states = @preprocess(input)
+    states = @processor.pre(input)
 
     # Ignore phrases with fewer than the minimum words.
     if states.length < @min
@@ -72,7 +73,7 @@ class MarkovModel
   # "callback" with it. The generated text will begin with "seed" and contain
   # at most "max" words.
   generate: (seed, max, callback) ->
-    states = @preprocess(seed)
+    states = @processor.pre(seed)
 
     # Create the initial storage key from "seed", if one is provided.
     key = states.slice(states.length - @ply, states.length)
@@ -83,7 +84,7 @@ class MarkovModel
     chain = []
     chain.push states...
 
-    @._generate_more key, chain, max, callback
+    @processor.post @._generate_more key, chain, max, callback
 
   # Recursive companion to "generate". Queries @storage for the choices available
   # from next hops from the current state described by "key", selects a hop

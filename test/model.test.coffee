@@ -3,6 +3,7 @@ async = require 'async'
 
 MarkovModel = require '../src/model'
 storage = require '../src/storage'
+processors = require '../src/processors'
 
 SENTINEL = MarkovModel.sentinel
 
@@ -39,6 +40,7 @@ describe 'MarkovModel', ->
         storage = new storageClass.constructor(storageClass.connStr, 'modelname')
         storage.initialize ->
           model = new MarkovModel(storage, 2, 3)
+          model.processWith processors.identity
           done()
 
       describe '_chooseWeighted()', ->
