@@ -10,8 +10,6 @@ services:
 - postgresql
 env:
   REDIS_URL: redis://localhost:6379/0
-  DATABASE_URL: postgres://postgres@localhost/cidb
-before_script:
-- psql -U postgres -c 'create database cidb;'
+  DATABASE_URL: postgres://postgres@localhost/travis
 notifications:
   email: false
