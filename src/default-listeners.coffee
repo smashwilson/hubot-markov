@@ -8,6 +8,9 @@ processors = require './processors'
 module.exports = (robot, config) ->
   activeModelNames = []
 
+  reportErr = (msg, err) ->
+    msg.send ":boom:\n```#{err.stack}```"
+
   if config.defaultModel
     robot.markov.createModel 'default_forward', {}
     activeModelNames.push 'default_forward'
@@ -18,7 +21,9 @@ module.exports = (robot, config) ->
 
     # Generate markov chains on demand, optionally seeded by some initial state.
     robot.respond /markov(\s+(.+))?$/i, (msg) ->
-      robot.markov.generateForward msg.match[2] or '', (text) -> msg.send text
+      robot.markov.generateForward msg.match[2] or '', (err, text) ->
+        return reportErr(err) if err?
+        msg.send text
 
   if config.reverseModel
     robot.markov.createModel 'default_reverse', {}, (model) ->
@@ -32,7 +37,9 @@ module.exports = (robot, config) ->
 
     # Generate reverse markov chains on demand, optionally seeded by some end state
     robot.respond /remarkov(\s+(.+))?$/i, (msg) ->
-      robot.markov.generateReverse msg.match[2] or '', (text) -> msg.send text
+      robot.markov.generateReverse msg.match[2] or '', (err, text) ->
+        return reportErr(err) if err?
+        msg.send text
 
   if config.defaultModel and config.reverseModel
 
@@ -42,20 +49,23 @@ module.exports = (robot, config) ->
           model.generate seed, config.generateMax, cb
 
       generateRest = (right, cb) ->
-        words = preprocessor.words(right)
+        words = processors.words.pre(right)
         rightSeed = words.shift() or ''
-        rest = words.join ' '
 
         robot.markov.modelNamed 'default_reverse', (model) ->
-          model.generate rightSeed, config.generateMax, (left) ->
-            cb([left, rest].join ' ')
+          model.generate rightSeed, config.generateMax, (err, left) ->
+            return cb(err) if err?
+            cb(null, [left, words...].join ' ')
 
-      generateRight (right) ->
+      generateRight (err, right) ->
+        return callback(err) if err?
         generateRest right, callback
 
     # Generate markov chains with the seed in the middle
     robot.respond /mmarkov(\s+(.+))?$/i, (msg) ->
-      robot.markov.generateMiddle msg.match[2] or '', (text) -> msg.send text
+      robot.markov.generateMiddle msg.match[2] or '', (err, text) ->
+        return reportErr(err) if err?
+        msg.send text
 
   if activeModelNames.length isnt 0
 

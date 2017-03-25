@@ -84,7 +84,10 @@ class MarkovModel
     chain = []
     chain.push states...
 
-    @processor.post @._generate_more key, chain, max, callback
+    @._generate_more key, chain, max, (err, output) =>
+      return callback(err) if err?
+
+      callback(null, @processor.post output)
 
   # Recursive companion to "generate". Queries @storage for the choices available
   # from next hops from the current state described by "key", selects a hop
