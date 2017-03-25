@@ -49,6 +49,11 @@ class RedisStorage
   get: (prior, callback) ->
     @client.hgetall @._encode(prior), (err, hash) ->
       return callback(err) if err?
-      callback(null, hash)
+
+      converted = {}
+      for state, count in hash
+        converted[state] = parseInt(count)
+
+      callback(null, converted)
 
 module.exports = RedisStorage
