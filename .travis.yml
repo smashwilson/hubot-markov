@@ -1,5 +1,17 @@
+dist: trusty
+sudo: false
 language: node_js
 node_js:
 - node
+addons:
+ postgresql: "9.6.1"
+services:
+- redis-server
+- postgresql
+env:
+  REDIS_URL: redis://localhost:6379/0
+  DATABASE_URL: postgres://postgres@localhost/cidb
+before_script:
+- psql -U postgres -c 'create database cidb;'
 notifications:
   email: false
