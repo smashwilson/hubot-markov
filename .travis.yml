@@ -4,7 +4,7 @@ language: node_js
 node_js:
 - node
 addons:
- postgresql: "9.6.1"
+ postgresql: "9.6"
 services:
 - redis-server
 - postgresql
