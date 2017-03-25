@@ -49,6 +49,6 @@ class RedisStorage
   get: (prior, callback) ->
     @client.hgetall @._encode(prior), (err, hash) ->
       return callback(err) if err?
-      callback(hash)
+      callback(null, hash)
 
 module.exports = RedisStorage
