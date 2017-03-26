@@ -1,4 +1,5 @@
 {Pool} = require 'pg'
+url = require 'url'
 
 # Markov storage implementation that uses a PostgreSQL table to store the model.
 class PostgresStorage
@@ -6,8 +7,16 @@ class PostgresStorage
   # Create a storage module that connects to PostgreSQL.
   # The model name is used to determine the table that stores this model.
   constructor: (connStr, @modelName = "markov") ->
-    @pool = new Pool(connStr or
-      process.env.DATABASE_URL)
+    params = url.parse(connStr or process.env.DATABASE_URL)
+    auth = params.auth.split ':'
+
+    @pool = new Pool
+      user: auth[0]
+      password: auth[1]
+      host: params.hostname
+      port: params.port
+      database: params.pathname.split('/')[1]
+      ssl: process.env.DATABASE_SSL isnt 'false'
 
     unless /^[a-zA-Z_]+$/.test @modelName
       throw new Error("Invalid characters in model name: [#{@modelName}] Only a-zA-Z_ are allowed.")
