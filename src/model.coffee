@@ -108,4 +108,8 @@ class MarkovModel
 
         @._generate_more(key, chain, max - 1, callback)
 
+  # Delete any and all persistent resources associated with this model.
+  destroy: (callback) ->
+    @storage.destroy callback
+
 module.exports = MarkovModel

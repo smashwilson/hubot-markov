@@ -41,7 +41,7 @@ describe 'MarkovModel', ->
         storage.initialize ->
           model = new MarkovModel(storage, 2, 3)
           model.processWith processors.identity
-          done()
+          model.destroy done
 
       describe '_chooseWeighted()', ->
         it 'returns the sentinel value if there are no choices', ->
@@ -158,6 +158,8 @@ describe 'MarkovModel', ->
 
       describe 'generate()', ->
         it 'produces text by following stored transitions', (done) ->
+          @timeout(10000)
+
           storage.incrementTransitions [
             { from: [SENTINEL, SENTINEL], to: 'a' }
             { from: [SENTINEL, 'a'], to: 'b' }
@@ -178,6 +180,7 @@ describe 'MarkovModel', ->
               'a b c2 d2': 0
 
             ITERATION_COUNT = 10000
+            TOLERANCE = ITERATION_COUNT / 100
 
             generate = (n, cb) ->
               model.generate [], 10, (err, states) ->
@@ -186,8 +189,8 @@ describe 'MarkovModel', ->
                 cb()
             async.times ITERATION_COUNT, generate, (err) ->
               expect(err).to.not.exist
-              expect(occurrences['a b c1 d1']).to.be.closeTo(ITERATION_COUNT / 3, 500)
-              expect(occurrences['a b c2 d2']).to.be.closeTo(2 * ITERATION_COUNT / 3, 500)
+              expect(occurrences['a b c1 d1']).to.be.closeTo(ITERATION_COUNT / 3, TOLERANCE)
+              expect(occurrences['a b c2 d2']).to.be.closeTo(2 * ITERATION_COUNT / 3, TOLERANCE)
               done()
 
         it 'truncates phrases at max words', (done) ->

@@ -54,4 +54,8 @@ class PostgresStorage
 
       callback(null, hash)
 
+  destroy: (callback) ->
+    statement = "DROP TABLE IF EXISTS #{@modelName}"
+    @pool.query statement, callback
+
 module.exports = PostgresStorage

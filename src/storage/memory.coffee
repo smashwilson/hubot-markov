@@ -27,4 +27,8 @@ class MemoryStorage
     hash = @transitions[key] or {}
     process.nextTick -> callback(null, hash)
 
+  # Memory storage has no persistent backing.
+  destroy: (callback) ->
+    process.nextTick -> callback(null)
+
 module.exports = MemoryStorage

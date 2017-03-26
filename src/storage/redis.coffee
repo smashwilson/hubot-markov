@@ -51,9 +51,32 @@ class RedisStorage
       return callback(err) if err?
 
       converted = {}
-      for state, count in hash
+      for own state, count of hash
         converted[state] = parseInt(count)
 
       callback(null, converted)
+
+  # Remove all persistent storage related to this model.
+  destroy: (callback) ->
+    cursor = null
+
+    advance = =>
+      if cursor is '0'
+        return callback(null)
+      else
+        @client.scan [cursor or '0', 'match', "#{@keyPrefix}*"], processBatch
+
+    processBatch = (err, reply) =>
+      return callback(err) if err?
+      [cursor, batch] = reply
+
+      if batch.length is 0
+        advance()
+      else
+        @client.del batch, (err) =>
+          return callback(err) if err?
+          advance()
+
+    advance()
 
 module.exports = RedisStorage
