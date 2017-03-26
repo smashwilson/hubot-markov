@@ -9,7 +9,7 @@ class PostgresStorage
     @pool = new Pool(connStr or
       process.env.DATABASE_URL)
 
-    unless /^[a-zA-Z_]$/.test @modelName
+    unless /^[a-zA-Z_]+$/.test @modelName
       throw new Error("Invalid characters in model name: [#{@modelName}] Only a-zA-Z_ are allowed.")
 
     @constraintName = "#{@modelName}_pkey"
