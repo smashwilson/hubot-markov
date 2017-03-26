@@ -6,31 +6,46 @@ storage = require '../src/storage'
 processors = require '../src/processors'
 
 SENTINEL = MarkovModel.sentinel
+CHOSEN_CLASSES = ['memory', 'redis', 'postgres']
+if process.env.MEMORYTEST_USE?
+  CHOSEN_CLASSES = process.env.MEMORYTEST_USE.split(/\s+/).map (klass) -> klass.toLowerCase()
 
 describe 'MarkovModel', ->
 
   storageClasses = []
 
-  storageClasses.push
-    name: 'Memory'
-    constructor: storage.memory
-    connStr: ''
-
-  if process.env.REDIS_URL?
+  if 'memory' in CHOSEN_CLASSES
     storageClasses.push
-      name: 'Redis'
-      constructor: storage.redis
-      connStr: process.env.REDIS_URL
+      name: 'Memory'
+      constructor: storage.memory
+      connStr: ''
+
+  if 'redis' in CHOSEN_CLASSES
+    if process.env.REDIS_URL?
+      storageClasses.push
+        name: 'Redis'
+        constructor: storage.redis
+        connStr: process.env.REDIS_URL
+    else
+      it 'is missing ${REDIS_URL} in the test environment', ->
+        expect.fail 'missing environment variable'
   else
     it 'should be tested with a redis URL as ${REDIS_URL}'
 
-  if process.env.DATABASE_URL?
-    storageClasses.push
-      name: 'Postgres'
-      constructor: storage.postgres
-      connStr: process.env.DATABASE_URL
+  if 'postgres' in CHOSEN_CLASSES
+    if process.env.DATABASE_URL?
+      storageClasses.push
+        name: 'Postgres'
+        constructor: storage.postgres
+        connStr: process.env.DATABASE_URL
+    else
+      it 'is missing ${DATABASE_URL} in the test environment', ->
+        expect.fail 'missing environment variable'
   else
     it 'should be tested with a Postgres database at ${DATABASE_URL}'
+
+  it 'should exercise at least one storage implementation', ->
+    expect(storageClasses).to.not.be.empty
 
   generate = (storageClass) ->
     describe "with #{storageClass.name} storage", ->
@@ -180,7 +195,7 @@ describe 'MarkovModel', ->
               'a b c2 d2': 0
 
             ITERATION_COUNT = 10000
-            TOLERANCE = ITERATION_COUNT / 100
+            TOLERANCE = ITERATION_COUNT / 10
 
             generate = (n, cb) ->
               model.generate [], 10, (err, states) ->
