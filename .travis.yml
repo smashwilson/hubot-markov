@@ -1,6 +1,15 @@
+dist: trusty
+sudo: false
 language: node_js
 node_js:
-  - "0.11"
-  - "0.10"
+- node
+addons:
+ postgresql: "9.6"
+services:
+- redis-server
+- postgresql
+env:
+  REDIS_URL: redis://localhost:6379/0
+  DATABASE_URL: postgres://postgres@localhost/travis
 notifications:
   email: false

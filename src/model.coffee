@@ -1,27 +1,30 @@
+processors = require './processors'
+
 # A markov model backed by a configurably storage engine that can both learn and
 # generate random text.
 class MarkovModel
 
   # Chain termination marker; chosen because _words will never contain whitespace.
-  sentinel = ' '
+  @sentinel = ' '
 
   # Build a new model with the provided storage backend and order. A markov model's
   # order is the number of prior states that will be examined to determine the
   # probabilities of the next state.
   constructor: (@storage, @ply, @min) ->
+    @processor = processors.words
 
-  # Split a line of text into whitespace-separated, nonempty words.
-  _words: (phrase) ->
-    (word for word in phrase.split /\s+/ when word.length > 0)
+  # Use a pair of functions to transform input presented to the model in .learn()
+  # before it's presented to storage and tokens returned by .generate().
+  processWith: (@processor) ->
 
-  # Generate a uniformly distributed random number between 0 and max, inclusive.
+  # Generate a uniformly distributed random number between 0 and max.
   _random: (max) ->
-    Math.floor(Math.random() * (max + 1))
+    Math.random() * max
 
   # Given an object with possible choices as keys and relative frequencies as values,
   # choose a key with probability proportional to its frequency.
   _chooseWeighted: (choices) ->
-    return sentinel unless choices
+    return MarkovModel.sentinel unless choices? and Object.keys(choices).length isnt 0
 
     # Sum the frequencies of the available choices and choose a value within that
     # range.
@@ -37,59 +40,66 @@ class MarkovModel
       return key if chosen <= acc
 
     # If we get here, "chosen" was greater than total.
-    throw "Bad choice: #{chosen} from #{total}"
+    throw new Error("Bad choice: #{chosen} from #{total}")
 
   # Generate each state transition of order @ply among "words". For example,
   # with @ply 2 and a phrase ["a", "b", "c", "d"], this would generate:
   #
-  # { from: [null, null] to: 'a' }
-  # { from: [null, 'a'] to: 'b' }
+  # { from: [' ', ' '] to: 'a' }
+  # { from: [' ', 'a'] to: 'b' }
   # { from: ['a', 'b'], to: 'c' }
   # { from: ['b', 'c'], to: 'd' }
   # { from: ['c', 'd'], to: ' ' }
-  _transitions: (words) ->
-    words.unshift null for i in [1..@ply]
-    words.push null for i in [1..@ply]
-    for i in [0..words.length - @ply - 1]
-      { from: words.slice(i, i + @ply), to: words[i + @ply] or sentinel }
+  # { from: ['d', ' '], to: ' ' }
+  _transitions: (states) ->
+    states.unshift MarkovModel.sentinel for i in [1..@ply]
+    states.push MarkovModel.sentinel for i in [1..@ply]
+    for i in [0..states.length - @ply - 1]
+      { from: states.slice(i, i + @ply), to: states[i + @ply] or MarkovModel.sentinel }
 
   # Add a phrase to the model. Increments the frequency of each @ply-order
   # state transition extracted from the phrase. Ignores any phrases containing
   # less than @min words.
-  learn: (phrase) ->
-    words = @._words(phrase)
+  learn: (input, callback = ->) ->
+    states = @processor.pre(input)
 
     # Ignore phrases with fewer than the minimum words.
-    return if words.length < @min
+    if states.length < @min
+      return process.nextTick callback
 
-    @storage.increment(t) for t in @._transitions(words)
+    @storage.incrementTransitions(t for t in @._transitions(states), callback)
 
   # Generate random text based on the current state of the model and invokes
   # "callback" with it. The generated text will begin with "seed" and contain
   # at most "max" words.
   generate: (seed, max, callback) ->
-    words = @._words(seed)
+    states = @processor.pre(seed)
 
     # Create the initial storage key from "seed", if one is provided.
-    key = words.slice(words.length - @ply, words.length)
+    key = states.slice(states.length - @ply, states.length)
     if key.length < @ply
-      key.unshift null for i in [1..@ply - key.length]
+      key.unshift MarkovModel.sentinel for i in [1..@ply - key.length]
 
     # Initialize the response chain with the seed.
     chain = []
-    chain.push words...
+    chain.push states...
 
-    @._generate_more key, chain, max, callback
+    @._generate_more key, chain, max, (err, output) =>
+      return callback(err) if err?
+
+      callback(null, @processor.post output)
 
   # Recursive companion to "generate". Queries @storage for the choices available
   # from next hops from the current state described by "key", selects a hop
   # weighted by frequencies, and pushes it onto the chain. If the chain is complete,
   # invokes the callback and lets the call stack unwind.
   _generate_more: (key, chain, max, callback) ->
-    @storage.get key, (choices) =>
+    @storage.get key, (err, choices) =>
+      return callback(err) if err?
+
       next = @._chooseWeighted choices
-      if next is sentinel or max <= 0
-        callback(chain.join(' '))
+      if next is MarkovModel.sentinel or max <= 0
+        callback(null, chain)
       else
         chain.push next
 
@@ -97,5 +107,9 @@ class MarkovModel
         key.push next
 
         @._generate_more(key, chain, max - 1, callback)
+
+  # Delete any and all persistent resources associated with this model.
+  destroy: (callback) ->
+    @storage.destroy callback
 
 module.exports = MarkovModel

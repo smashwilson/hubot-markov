@@ -4,7 +4,7 @@
 export NODE_ENV=development
 
 # Load environment specific environment variables
-if [ -f .env ]; then 
+if [ -f .env ]; then
   source .env
 fi
 
@@ -12,7 +12,9 @@ if [ -f .env.${NODE_ENV} ]; then
   source .env.${NODE_ENV}
 fi
 
-npm install
+if [ ! -d node_modules/ ]; then
+  npm install
+fi
 
 # Make sure coffee and mocha are on the path
 export PATH="node_modules/.bin:$PATH"
