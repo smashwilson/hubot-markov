@@ -46,7 +46,7 @@ module.exports = (hash) ->
     ply: intSetting(hash, 'HUBOT_MARKOV_PLY', 1)
     learnMin: intSetting(hash, 'HUBOT_MARKOV_LEARN_MIN', 1)
     generateMax: intSetting(hash, 'HUBOT_MARKOV_GENERATE_MAX', 50)
-    storageKind: enumSetting(hash, 'HUBOT_MARKOV_STORAGE', Object.keys(storageMap), 'redis')
+    storageKind: enumSetting(hash, 'HUBOT_MARKOV_STORAGE', Object.keys(storageMap), 'memory')
     storageUrl: stringSetting(hash, 'HUBOT_MARKOV_STORAGE_URL', null)
     respondChance: intSetting(hash, 'HUBOT_MARKOV_RESPOND_CHANCE', 0)
     defaultModel: boolSetting(hash, 'HUBOT_MARKOV_DEFAULT_MODEL', true)
