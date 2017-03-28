@@ -8,7 +8,7 @@ Generates a markov model based on everything that your Hubot sees in your chat.
 
 ```json
   "dependencies": {
-    "hubot-markov": "~1.6.0"
+    "hubot-markov": "~2.0.0"
   },
 ```
 
