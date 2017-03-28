@@ -24,7 +24,7 @@ class MarkovModel
   # Given an object with possible choices as keys and relative frequencies as values,
   # choose a key with probability proportional to its frequency.
   _chooseWeighted: (choices) ->
-    return MarkovModel.sentinel unless choices? and choices.length isnt 0
+    return MarkovModel.sentinel unless choices? and Object.keys(choices).length isnt 0
 
     # Sum the frequencies of the available choices and choose a value within that
     # range.

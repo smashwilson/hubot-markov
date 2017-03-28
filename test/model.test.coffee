@@ -230,27 +230,46 @@ describe 'MarkovModel', ->
               expect(states).to.deep.equal ['a', 'b', 'c']
               done()
 
-        it 'uses a seed to begin the generated phrase', (done) ->
-          storage.incrementTransitions [
-            { from: [SENTINEL, SENTINEL], to: 'a' }
-            { from: [SENTINEL, 'a'], to: 'b' }
-            { from: ['a', 'b'], to: 'c' }
-            { from: ['b', 'c'], to: 'd' }
-            { from: ['c', 'd'], to: SENTINEL }
-            { from: ['d', SENTINEL], to: SENTINEL }
-            { from: [SENTINEL, SENTINEL], to: '1' }
-            { from: [SENTINEL, '1'], to: '2' }
-            { from: ['1', '2'], to: '3' }
-            { from: ['2', '3'], to: '4' }
-            { from: ['3', '4'], to: SENTINEL }
-            { from: ['4', SENTINEL], to: SENTINEL }
-          ], (err) ->
-            expect(err).to.not.exist
+        describe 'with a seed', ->
 
-            generate = (n, cb) -> model.generate ['1', '2'], 10, cb
-            async.times 100, generate, (err, results) ->
+          beforeEach (done) ->
+            storage.incrementTransitions [
+              { from: [SENTINEL, SENTINEL], to: 'a' }
+              { from: [SENTINEL, 'a'], to: 'b' }
+              { from: ['a', 'b'], to: 'c' }
+              { from: ['b', 'c'], to: 'd' }
+              { from: ['c', 'd'], to: SENTINEL }
+              { from: ['d', SENTINEL], to: SENTINEL }
+              { from: [SENTINEL, SENTINEL], to: '1' }
+              { from: [SENTINEL, '1'], to: '2' }
+              { from: ['1', '2'], to: '3' }
+              { from: ['2', '3'], to: '4' }
+              { from: ['3', '4'], to: SENTINEL }
+              { from: ['4', SENTINEL], to: SENTINEL }
+            ], done
+
+          it 'uses a seed to begin the generated phrase', (done) ->
+            model.generate ['2', '3'], 10, (err, states) ->
               expect(err).to.not.exist
-              expect(results.every (r) -> r.join(' ') is '1 2 3 4')
+              expect(states).to.deep.equal ['2', '3', '4']
+              done()
+
+          it 'handles seeds not present in the model', (done) ->
+            model.generate ['nope'], 10, (err, states) ->
+              expect(err).to.not.exist
+              expect(states).to.deep.equal ['nope']
+              done()
+
+          it 'handles seeds longer than @ply', (done) ->
+            model.generate ['foo', 'bar', 'b', 'c'], 10, (err, states) ->
+              expect(err).to.not.exist
+              expect(states).to.deep.equal ['foo', 'bar', 'b', 'c', 'd']
+              done()
+
+          it 'handles seeds shorter than @ply', (done) ->
+            model.generate ['1'], 10, (err, states) ->
+              expect(err).to.not.exist
+              expect(states).to.deep.equal ['1', '2', '3', '4']
               done()
 
   generate(storageClass) for storageClass in storageClasses
