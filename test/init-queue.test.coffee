@@ -39,20 +39,20 @@ describe 'InitQueue', ->
         expect(r).to.equal 'a thing'
         done()
 
-    describe 'when failed', ->
-      [q, prevCall] = []
+  describe 'when failed', ->
+    [q, prevCall] = []
 
-      beforeEach ->
-        q = InitQueue.accumulating()
-        q.accept (r) -> prevCall = r
+    beforeEach ->
+      q = InitQueue.accumulating()
+      q.accept (r) -> prevCall = r
 
-      it 'ignores existing callbacks', ->
-        q.failed()
-        expect(prevCall).to.be.undefined
+    it 'ignores existing callbacks', ->
+      q.failed()
+      expect(prevCall).to.be.undefined
 
-      it 'ignores new callbacks', ->
-        q.failed()
+    it 'ignores new callbacks', ->
+      q.failed()
 
-        called = null
-        q.accept (r) -> called = r
-        expect(called).to.be.null
+      called = null
+      q.accept (r) -> called = r
+      expect(called).to.be.null
