@@ -75,10 +75,10 @@ describe 'config', ->
       .to.throw /HUBOT_MARKOV_STORAGE must be one of/
 
     it 'falls back to the default on a missing key', ->
-      expect(config({}).storageKind).to.equal('redis')
+      expect(config({}).storageKind).to.equal('memory')
 
     it 'falls back to the default on an empty key', ->
-      expect(config({HUBOT_MARKOV_STORAGE: ''}).storageKind).to.equal('redis')
+      expect(config({HUBOT_MARKOV_STORAGE: ''}).storageKind).to.equal('memory')
 
   describe 'string settings', ->
     it 'passes the setting through as-is', ->
