@@ -6,21 +6,23 @@ storage = require '../src/storage'
 processors = require '../src/processors'
 
 SENTINEL = MarkovModel.sentinel
-CHOSEN_CLASSES = ['memory', 'redis', 'postgres']
-if process.env.MEMORYTEST_USE?
-  CHOSEN_CLASSES = process.env.MEMORYTEST_USE.split(/\s+/).map (klass) -> klass.toLowerCase()
+MEMORYTEST_STORAGE = ['memory', 'redis', 'postgres']
+if process.env.MEMORYTEST_STORAGE?
+  MEMORYTEST_STORAGE = process.env.MEMORYTEST_STORAGE.split(/\s+/).map (klass) -> klass.toLowerCase()
 
 describe 'MarkovModel', ->
 
   storageClasses = []
 
-  if 'memory' in CHOSEN_CLASSES
+  if 'memory' in MEMORYTEST_STORAGE
     storageClasses.push
       name: 'Memory'
       constructor: storage.memory
       connStr: ''
+  else
+    it 'should be tested with memory storage'
 
-  if 'redis' in CHOSEN_CLASSES
+  if 'redis' in MEMORYTEST_STORAGE
     if process.env.REDIS_URL?
       storageClasses.push
         name: 'Redis'
@@ -32,7 +34,7 @@ describe 'MarkovModel', ->
   else
     it 'should be tested with a redis URL as ${REDIS_URL}'
 
-  if 'postgres' in CHOSEN_CLASSES
+  if 'postgres' in MEMORYTEST_STORAGE
     if process.env.DATABASE_URL?
       storageClasses.push
         name: 'Postgres'
@@ -56,7 +58,11 @@ describe 'MarkovModel', ->
         storage.initialize ->
           model = new MarkovModel(storage, 2, 3)
           model.processWith processors.identity
-          model.destroy done
+          done()
+
+      afterEach (done) ->
+        @timeout(5000)
+        model.destroy done
 
       describe '_chooseWeighted()', ->
         it 'returns the sentinel value if there are no choices', ->
@@ -194,7 +200,7 @@ describe 'MarkovModel', ->
               'a b c1 d1': 0
               'a b c2 d2': 0
 
-            ITERATION_COUNT = 10000
+            ITERATION_COUNT = 1000
             TOLERANCE = ITERATION_COUNT / 10
 
             generate = (n, cb) ->

@@ -25,25 +25,39 @@ class PostgresStorage
 
   # Ensure that this model's table exists.
   initialize: (callback) ->
-    statement = "CREATE TABLE IF NOT EXISTS #{@modelName}
-        (from TEXT, to TEXT, frequency INTEGER,
-         CONSTRAINT #{@constraintName} PRIMARY KEY (from, to))"
+    statement = """
+      CREATE TABLE IF NOT EXISTS #{@modelName}
+      ("from" TEXT, "to" TEXT, frequency INTEGER,
+      CONSTRAINT #{@constraintName} PRIMARY KEY ("from", "to"))
+      """
     @pool.query statement, callback
 
   # Record a set of transitions within the model. "transition.from" is an array of Strings
   # and nulls marking the prior state and "transition.to" is the observed next state, which
   # may be an end-of-chain sentinel.
   incrementTransitions: (transitions, callback) ->
-    placeholders = ("($#{i * 2 - 1}, $#{i * 2}, 1)" for i in [1..transitions.length]).join ', '
+    grouped = {}
+    placeholders = []
     values = []
+
     for transition in transitions
-      values.push transition.from.join ' '
-      values.push transition.to
+      key = transition.from.join(' ') + ' ' + transition.to
+      grouped[key] =
+        from: transition.from.join(' ')
+        to: transition.to
+        tally: if grouped[key]? then grouped[key].tally + 1 else 1
+
+    count = 1
+    for key, {from, to, tally} of grouped
+      placeholders.push "($#{count}, $#{count + 1}, $#{count + 2})"
+      count += 3
+      values.push from, to, tally
 
     options =
       text: """
-        INSERT INTO #{@modelName} (from, to, frequency) VALUES #{placeholders}
-        ON CONFLICT #{@constraintName} UPDATE SET frequency = frequency + 1
+        INSERT INTO #{@modelName} ("from", "to", frequency) VALUES #{placeholders.join ', '}
+        ON CONFLICT ON CONSTRAINT #{@constraintName}
+        DO UPDATE SET frequency = #{@modelName}.frequency + excluded.frequency
         """
       values: values
     @pool.query options, callback
@@ -52,7 +66,9 @@ class PostgresStorage
   # relative frequencies. Invokes "callback" with any errors and the object.
   get: (prior, callback) ->
     options =
-      text: "SELECT to, frequency FROM #{@modelName} WHERE from = $1"
+      text: """
+        SELECT "to", frequency FROM #{@modelName} WHERE "from" = $1
+        """
       values: [prior.join ' ']
     @pool.query options, (err, result) ->
       return callback(err) if err?
