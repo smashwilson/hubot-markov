@@ -1,5 +1,7 @@
 # Hubot Markov Model
 
+[![npm](https://img.shields.io/npm/v/hubot-markov.svg?style=plastic)](https://www.npmjs.com/package/hubot-markov) [![Travis branch](https://img.shields.io/travis/smashwilson/hubot-markov/master.svg?style=plastic)](https://travis-ci.org/smashwilson/hubot-markov)
+
 Generates a markov model based on everything that your Hubot sees in your chat.
 
 ## Installing
