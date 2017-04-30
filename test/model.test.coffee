@@ -10,6 +10,8 @@ MEMORYTEST_STORAGE = ['memory', 'redis', 'postgres']
 if process.env.MEMORYTEST_STORAGE?
   MEMORYTEST_STORAGE = process.env.MEMORYTEST_STORAGE.split(/\s+/).map (klass) -> klass.toLowerCase()
 
+sharedConnection = null
+
 describe 'MarkovModel', ->
 
   storageClasses = []
@@ -54,7 +56,13 @@ describe 'MarkovModel', ->
       [storage, model] = []
 
       beforeEach (done) ->
-        storage = new storageClass.constructor(storageClass.connStr, 'modelname')
+        if sharedConnection?
+          robot =
+            getDatabase: -> sharedConnection
+
+        storage = new storageClass.constructor(storageClass.connStr, 'modelname', robot)
+        sharedConnection = storage.db if storage.db?
+
         storage.initialize ->
           model = new MarkovModel(storage, 2, 3)
           model.processWith processors.identity

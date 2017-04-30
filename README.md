@@ -53,13 +53,15 @@ The Hubot markov model can optionally be configured by setting environment varia
   * `redis`, which stores data in a Redis cache; or
   * `postgres`, which stores data in a PostgreSQL database.
 
-* `HUBOT_MARKOV_STORAGE_URL` supplies additional configuration required by the `redis` and `postgres` storage backends. The formats are `redis://${USER}:${PASSWORD}@${HOSTNAME}:${PORT}/${DBNUM}` and `postgres://${USER}:${PASSWORD}@${HOSTNAME}:${PORT}/${DATABASE}` with defaults omitted. To connect to a PostgreSQL database over a non-SSL connection (such as for local development), also set `DATABASE_SSL` to `false`.
+* `HUBOT_MARKOV_STORAGE_URL` supplies additional configuration required by the `redis` and `postgres` storage backends. The formats are `redis://${USER}:${PASSWORD}@${HOSTNAME}:${PORT}/${DBNUM}` and `postgres://${USER}:${PASSWORD}@${HOSTNAME}:${PORT}/${DATABASE}` with defaults omitted.
 
 * `HUBOT_MARKOV_RESPOND_CHANCE` controls the chance that Hubot will respond un-prompted to a message it sees by using the last word in the message as the seed. Set this to a value between 0 and 1.0 to enable the feature. Leaving this variable unset or setting it to 0 will disable the feature.
 
 * `HUBOT_MARKOV_INCLUDE_URLS` _(default: false)_ will default to ignoring messages that include URLs from the default models.
 
 * `HUBOT_MARKOV_IGNORELIST` _(default: empty)_ is interpreted as a comma-separated list of usernames to ignore for purposes of markov indexing. You can use this to prevent the output of other bots or integrations from clogging up your model.
+
+To re-use a PostgreSQL connection with other parts of your Hubot, define a robot method called `getDatabase` that returns the connection object. This package uses [pg-promise](https://www.npmjs.com/package/pg-promise).
 
 ## Custom models
 

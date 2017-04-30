@@ -37,7 +37,7 @@
   "dependencies": {
     "async": "2.1.4",
     "coffee-script": "~1.6",
-    "pg": "^6.1.0",
+    "pg-promise": "^5.4.5",
     "redis": "~0.9.1"
   },
   "devDependencies": {

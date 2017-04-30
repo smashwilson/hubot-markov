@@ -7,7 +7,7 @@ MarkovModel = require './model'
 #
 class ModelPool
 
-  constructor: (@config) ->
+  constructor: (@config, @robot) ->
     @byName = {}
     @defaultStorageImpl = storageMap[@config.storageKind]
 
@@ -40,7 +40,7 @@ class ModelPool
     else
       storageImpl = @defaultStorageImpl
 
-    storage = new storageImpl(options.storageUrl, name)
+    storage = new storageImpl(options.storageUrl, name, @robot)
     storage.initialize (err) ->
       if err?
         queue.failed()

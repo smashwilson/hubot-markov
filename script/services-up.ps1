@@ -3,6 +3,5 @@ docker run -d -p 5432:5432 -u postgres -e POSTGRES_USER=markov -e POSTGRES_PASSW
 
 $env:REDIS_URL = "redis://localhost:6379"
 $env:DATABASE_URL = "postgres://markov:shhh@localhost/markov"
-$env:DATABASE_SSL = "false"
 
 Write-Output "Services up"
