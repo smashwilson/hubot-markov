@@ -61,6 +61,8 @@ The Hubot markov model can optionally be configured by setting environment varia
 
 * `HUBOT_MARKOV_IGNORELIST` _(default: empty)_ is interpreted as a comma-separated list of usernames to ignore for purposes of markov indexing. You can use this to prevent the output of other bots or integrations from clogging up your model.
 
+To re-use a PostgreSQL connection with other parts of your Hubot, define a robot method called `getDatabase` that returns the connection object. This package uses [pg-promise](https://www.npmjs.com/package/pg-promise).
+
 ## Custom models
 
 Store and generate text from arbitrary sources and in more complex commands by using the programmatic API available at `robot.markov`. Call `robot.markov.createModel` during script initialization to configure a model, then use `robot.markov.modelNamed` to access the model instance in commands that train it or generate from it.
