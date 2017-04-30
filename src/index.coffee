@@ -46,5 +46,5 @@ defaultListeners = require './default-listeners'
 module.exports = (robot) ->
   conf = config process.env
 
-  robot.markov = new ModelPool(conf)
+  robot.markov = new ModelPool(conf, robot)
   defaultListeners(robot, conf)
