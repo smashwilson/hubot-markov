@@ -82,7 +82,7 @@ class PostgresStorage
     adaptPromise(@db.none(sql), callback)
 
   disconnect: (callback) ->
-    @db.$pool.end()
+    @db.done()
     process.nextTick -> callback(null)
 
 module.exports = PostgresStorage
