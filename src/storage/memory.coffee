@@ -31,4 +31,7 @@ class MemoryStorage
   destroy: (callback) ->
     process.nextTick -> callback(null)
 
+  disconnect: (callback) ->
+    process.nextTick -> callback(null)
+
 module.exports = MemoryStorage

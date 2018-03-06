@@ -79,4 +79,8 @@ class RedisStorage
 
     advance()
 
+  disconnect: (callback) ->
+    @client.quit()
+    process.nextTick -> callback(null)
+
 module.exports = RedisStorage
