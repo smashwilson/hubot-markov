@@ -35,18 +35,18 @@
     "url": "https://github.com/smashwilson/hubot-markov/issues"
   },
   "dependencies": {
-    "async": "2.1.4",
-    "coffee-script": "~1.6",
-    "pg-promise": "^5.4.5",
-    "redis": "~0.9.1"
+    "async": "2.6.0",
+    "coffee-script": "~1.12.7",
+    "pg-promise": "^8.1.1",
+    "redis": "~2.8.0"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
+    "chai": "^4.1.2",
     "hubot-test-helper": "^1.5.0",
-    "mocha": "^3.2.0"
+    "mocha": "^5.0.2"
   },
   "main": "index.coffee",
   "scripts": {
-    "test": "mocha --compilers coffee:coffee-script --colors"
+    "test": "mocha --require coffee-script/register --colors test/*.test.coffee"
   }
 }

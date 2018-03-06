@@ -70,7 +70,8 @@ describe 'MarkovModel', ->
 
       afterEach (done) ->
         @timeout(5000)
-        model.destroy done
+        model.destroy ->
+          storage.disconnect done
 
       describe '_chooseWeighted()', ->
         it 'returns the sentinel value if there are no choices', ->

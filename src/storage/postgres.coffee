@@ -81,4 +81,7 @@ class PostgresStorage
     sql = "DROP TABLE IF EXISTS #{@modelName}"
     adaptPromise(@db.none(sql), callback)
 
+  disconnect: (callback) ->
+    process.nextTick -> callback(null)
+
 module.exports = PostgresStorage
