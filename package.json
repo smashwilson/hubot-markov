@@ -47,6 +47,6 @@
   },
   "main": "index.coffee",
   "scripts": {
-    "test": "mocha --compilers coffee:coffee-script --colors"
+    "test": "mocha --compilers coffee:coffee-script/register --colors"
   }
 }
