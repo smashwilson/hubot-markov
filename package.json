@@ -35,7 +35,7 @@
     "url": "https://github.com/smashwilson/hubot-markov/issues"
   },
   "dependencies": {
-    "async": "3.0.1",
+    "async": "3.1.0",
     "coffee-script": "~1.12.7",
     "pg-promise": "^9.0.0",
     "redis": "~2.8.0"
