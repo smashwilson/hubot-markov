@@ -1,0 +1,61 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x]
+
+    services:
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+        - "6379:6379"
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: me
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: markov
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+        - "5432:5432"
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: install dependencies
+      run: npm ci
+    - name: tests
+      run: npm test
+      env:
+        CI: true
+        REDIS_URL: redis://localhost:6379/0
+        DATABASE_URL: postgres://me:password@localhost/markov
