@@ -20,6 +20,26 @@ jobs:
       matrix:
         node-version: [10.x, 12.x]
 
+    services:
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: me
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: markov
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - name: checkout
       uses: actions/checkout@v2
@@ -29,16 +49,9 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - name: install dependencies
       run: npm ci
-    - name: start redis
-      uses: supercharge/redis-github-action@1.1.0
-    - name: start postgresql
-      uses: harmon758/postgresql-action@v1.0.0
-      with:
-        postgresql db: markov
-        postgresql user: me
     - name: tests
       run: npm test
       env:
         CI: true
-        REDIS_URL: redis://localhost:6379/0
-        DATABASE_URL: postgres://me@localhost/markov
+        REDIS_URL: redis://redis:6379/0
+        DATABASE_URL: postgres://me:password@postgres/markov
