@@ -57,5 +57,5 @@ jobs:
       run: npm test
       env:
         CI: true
-        REDIS_URL: redis://redis:6379/0
-        DATABASE_URL: postgres://me:password@postgres/markov
+        REDIS_URL: redis://localhost:6379/0
+        DATABASE_URL: postgres://me:password@localhost/markov
