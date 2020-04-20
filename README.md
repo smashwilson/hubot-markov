@@ -1,8 +1,6 @@
 # Hubot Markov Model
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/smashwilson/hubot-markov.svg)](https://greenkeeper.io/)
-
-[![npm](https://img.shields.io/npm/v/hubot-markov.svg?style=plastic)](https://www.npmjs.com/package/hubot-markov) [![Travis branch](https://img.shields.io/travis/smashwilson/hubot-markov/master.svg?style=plastic)](https://travis-ci.org/smashwilson/hubot-markov)
+[![npm](https://img.shields.io/npm/v/hubot-markov.svg?style=plastic)](https://www.npmjs.com/package/hubot-markov) | ![Continuous Integration](https://github.com/smashwilson/hubot-markov/workflows/Continuous%20Integration/badge.svg)
 
 Generates a markov model based on everything that your Hubot sees in your chat.
 
