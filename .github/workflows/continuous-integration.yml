@@ -5,9 +5,11 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ master ]
+    branches:
+    - master
   pull_request:
-    branches: [ master ]
+    branches:
+    - master
 
 jobs:
   build:
@@ -19,12 +21,24 @@ jobs:
         node-version: [10.x, 12.x]
 
     steps:
-    - uses: actions/checkout@v2
+    - name: checkout
+      uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - run: npm ci
-    - run: npm test
+    - name: install dependencies
+      run: npm ci
+    - name: start redis
+      uses: supercharge/redis-github-action@1.1.0
+    - name: start postgresql
+      uses: harmon758/postgresql-action@v1.0.0
+      with:
+        postgresql db: markov
+        postgresql user: me
+    - name: tests
+      run: npm test
       env:
         CI: true
+        REDIS_URL: redis://localhost:6379/0
+        DATABASE_URL: postgres://me@localhost/markov
