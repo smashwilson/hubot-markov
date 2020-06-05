@@ -61,6 +61,18 @@ The Hubot markov model can optionally be configured by setting environment varia
 
 * `HUBOT_MARKOV_IGNORELIST` _(default: empty)_ is interpreted as a comma-separated list of usernames to ignore for purposes of markov indexing. You can use this to prevent the output of other bots or integrations from clogging up your model.
 
+* `HUBOT_MARKOV_IGNORE_MESSAGE_LIST` _(default: empty)_ is interpreted as a comma-separated list of sub-phrases to ignore from default and reverse models. Is a basic substring match for every message. Use this to ignore terms, like your bot's username
+
+* `HUBOT_MARKOV_LEARNING_LISTEN_MODE` - _(default: 'catch-all')_ change the robot.listen mode for learning, helpful if you have other plugins that interfere with robot.catchAll. Options:
+  * 'catch-all', learn message if no other scripts process message. 
+  * 'hear-all', learn every message, regardless if another script handled it.
+  *  If set to another value, will use it as a robot.listen regex pattern
+  
+* `HUBOT_MARKOV_RESPOND_LISTEN_MODE` - _(default: 'catch-all')_ change the robot.listen mode for responding, helpful if you have other plugins that interfere with robot.catchAll. Options:
+  * 'catch-all', learn message if no other scripts process message. 
+  * 'hear-all', learn every message, regardless if another script handled it.
+  *  If set to another value, will use it as a robot.listen regex pattern
+
 To re-use a PostgreSQL connection with other parts of your Hubot, define a robot method called `getDatabase` that returns the connection object. This package uses [pg-promise](https://www.npmjs.com/package/pg-promise).
 
 ## Custom models

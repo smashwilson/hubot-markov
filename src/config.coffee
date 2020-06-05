@@ -60,4 +60,7 @@ module.exports = (hash) ->
     reverseModel: boolSetting(hash, 'HUBOT_MARKOV_REVERSE_MODEL', true)
     includeUrls: boolSetting(hash, 'HUBOT_MARKOV_INCLUDE_URLS', false)
     ignoreList: listSetting(hash, 'HUBOT_MARKOV_IGNORE_LIST', [])
+    ignoreMessageList: listSetting(hash, 'HUBOT_MARKOV_IGNORE_MESSAGE_LIST', [])
+    learningListenMode: stringSetting(hash, 'HUBOT_MARKOV_LEARNING_LISTEN_MODE', 'catch-all')
+    respondListenMode: stringSetting(hash, 'HUBOT_MARKOV_RESPOND_LISTEN_MODE', 'catch-all')
   }
