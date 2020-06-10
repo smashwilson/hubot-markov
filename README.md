@@ -52,6 +52,7 @@ The Hubot markov model can optionally be configured by setting environment varia
   * `memory`, the default, which stores transitions entirely in-process (lost on restart);
   * `redis`, which stores data in a Redis cache; or
   * `postgres`, which stores data in a PostgreSQL database.
+  * `hubot_brain`, store transitions in the hubot brain, useful when using other plugins like hubot-redis-brain
 
 * `HUBOT_MARKOV_STORAGE_URL` supplies additional configuration required by the `redis` and `postgres` storage backends. The formats are `redis://${USER}:${PASSWORD}@${HOSTNAME}:${PORT}/${DBNUM}` and `postgres://${USER}:${PASSWORD}@${HOSTNAME}:${PORT}/${DATABASE}` with defaults omitted.
 
