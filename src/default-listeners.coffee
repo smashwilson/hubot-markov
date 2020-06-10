@@ -69,8 +69,7 @@ module.exports = (robot, config) ->
 
   if activeModelNames.length isnt 0
 
-    # The robot hears ALL. You cannot run.
-    robot.catchAll (msg) ->
+    learningListener = (msg) ->
       # Ignore empty messages
       return if !msg.message.text
 
@@ -80,12 +79,23 @@ module.exports = (robot, config) ->
       # Disregard ignored usernames.
       return if msg.message.user.name in config.ignoreList
 
+      # Disregard any messages that have keywords
+      for phrase in config.ignoreMessageList
+        return if msg.message.text.indexOf(phrase) isnt -1
+
       # Pass the message to each active model.
       for name in activeModelNames
         robot.markov.modelNamed name, (model) -> model.learn msg.message.text
 
+    if config.learningListenMode == 'hear-all'
+      robot.hear /.*/i, learningListener
+    else if config.learningListenMode == 'catch-all'
+      robot.catchAll learningListener
+    else
+      robot.hear RegExp("" + config.learningListenMode), learningListener
+
     if config.respondChance > 0
-      robot.catchAll (msg) ->
+      respondListener = (msg) ->
         if Math.random() < config.respondChance
           randomWord = msg.random(processors.words.pre(msg.message.text)) or ''
 
@@ -93,3 +103,10 @@ module.exports = (robot, config) ->
             robot.markov.generateMiddle randomWord, (text) -> msg.send text
           else
             robot.markov.generateForward randomWord, (text) -> msg.send text
+
+      if config.respondListenMode == 'hear-all'
+           robot.hear /.*/i, respondListener
+         else if config.respondListenMode == 'catch-all'
+           robot.catchAll respondListener
+         else
+           robot.hear RegExp("" + config.respondListenMode), respondListener

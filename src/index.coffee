@@ -26,6 +26,15 @@
 #      default and reverse models.
 #   HUBOT_MARKOV_RESPOND_CHANCE - The probability, between 0.0 and 1.0, that Hubot will respond
 #      un-prompted to a message by using the last word in the message as the seed. Default: 0.
+#   HUBOT_MARKOV_IGNORE_MESSAGE_LIST - Comma-separated list of sub-phrases to ignore from
+#      default and reverse models. Is a substring match for every message
+#   HUBOT_MARKOV_LEARNING_LISTEN_MODE - 'catch-all' (default): learn message if no other scripts
+#      process message. 'hear-all': learn every message, regardless if another script handled it.
+#      If set to another value, will use it as a robot.listen regex pattern
+#   HUBOT_MARKOV_RESPOND_LISTEN_MODE - 'catch-all' (default): give a chance to respond if no
+#      other scripts process message. 'hear-all': give a chance to respond to every message,
+#      regardless if another script handled it
+#      If set to another value, will use it as a robot.listen regex pattern
 #
 # Commands:
 #   hubot markov <seed> - Generate a markov chain, optionally seeded with the provided phrase.
