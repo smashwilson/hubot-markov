@@ -63,4 +63,7 @@ module.exports = (hash) ->
     ignoreMessageList: listSetting(hash, 'HUBOT_MARKOV_IGNORE_MESSAGE_LIST', [])
     learningListenMode: stringSetting(hash, 'HUBOT_MARKOV_LEARNING_LISTEN_MODE', 'catch-all')
     respondListenMode: stringSetting(hash, 'HUBOT_MARKOV_RESPOND_LISTEN_MODE', 'catch-all')
+    createUserModels: boolSetting(hash, 'HUBOT_MARKOV_CREATE_USER_MODELS', false)
+    userModelBlackList: listSetting(hash, 'HUBOT_MARKOV_USER_MODEL_BLACKLIST', [])
+    userModelWhiteList: listSetting(hash, 'HUBOT_MARKOV_USER_MODEL_WHITELIST', [])
   }
