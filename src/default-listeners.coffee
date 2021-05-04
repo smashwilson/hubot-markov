@@ -5,71 +5,96 @@
 
 processors = require './processors'
 
+reportErr = (msg, err) ->
+  msg.send ":boom:\n```#{err.stack}```"
+
+setupModelResponder = (robot, pattern, markovGeneratorFn) ->
+  robot.respond pattern, (msg) ->
+    markovGeneratorFn msg.match[2] or '', (err, text) ->
+      return reportErr(err) if err?
+      msg.send text
+
+getModelGenerationCallback = (robot, config, modelName) ->
+  return (seed, callback) ->
+    robot.markov.modelNamed modelName, (model) ->
+      model.generate seed, config.generateMax, callback
+
+generateDefaultModel = (robot, config) ->
+  robot.markov.createModel 'default_forward', {}
+  robot.markov.generateForward = getModelGenerationCallback(robot, config, 'default_forward')
+  # Generate markov chains on demand, optionally seeded by some initial state.
+  setupModelResponder robot, /markov(\s+(.+))?$/i, robot.markov.generateForward
+
+  return 'default_forward'
+
+generateReverseModel = (robot, config) ->
+  robot.markov.createModel 'default_reverse', {}, (model) ->
+    model.processWith processors.reverseWords
+
+  robot.markov.generateReverse = getModelGenerationCallback(robot, config, 'default_reverse')
+
+  # Generate reverse markov chains on demand, optionally seeded by some end state
+  setupModelResponder robot, /remarkov(\s+(.+))?$/i, robot.markov.generateReverse
+
+  return 'default_reverse'
+
+generateMiddleModel = (robot, config) ->
+  robot.markov.generateMiddle = (seed, callback) ->
+    generateRight = getModelGenerationCallback(robot, config, 'default_forward')
+
+    generateRest = (right, cb) ->
+      words = processors.words.pre(right)
+      rightSeed = words.shift() or ''
+
+      robot.markov.modelNamed 'default_reverse', (model) ->
+        model.generate rightSeed, config.generateMax, (err, left) ->
+          return cb(err) if err?
+          cb(null, [left, words...].join ' ')
+
+    generateRight (err, right) ->
+      return callback(err) if err?
+      generateRest right, callback
+
+  # Generate markov chains with the seed in the middle
+  setupModelResponder robot, /mmarkov(\s+(.+))?$/i, robot.markov.generateMiddle
+
+  return 'default_middle'
+
+getUserModel = (username, config, robot)->
+  userModelName = 'user_' + username
+
+  unless robot.markov.byName[userModelName]
+    robot.markov.createModel userModelName, {}
+    markovGenerateUser = getModelGenerationCallback(robot, config, userModelName)
+
+    # Generate user markov chains on demand, optionally seeded by some end state
+    umarkovUserPattern = "umarkov " + username + "(\s+(.+))?$"
+    setupModelResponder robot, RegExp(umarkovUserPattern), markovGenerateUser
+
+  return userModelName
+
+attachRobotListener = (robot, listenMode, listener) ->
+  if listenMode == 'hear-all'
+    robot.hear /.*/i, listener
+  else if listenMode == 'catch-all'
+    robot.catchAll listener
+  else
+    robot.hear RegExp("" + listenMode), listener
+
 module.exports = (robot, config) ->
   activeModelNames = []
 
-  reportErr = (msg, err) ->
-    msg.send ":boom:\n```#{err.stack}```"
-
   if config.defaultModel
-    robot.markov.createModel 'default_forward', {}
-    activeModelNames.push 'default_forward'
-
-    robot.markov.generateForward = (seed, callback) ->
-      robot.markov.modelNamed 'default_forward', (model) ->
-        model.generate seed, config.generateMax, callback
-
-    # Generate markov chains on demand, optionally seeded by some initial state.
-    robot.respond /markov(\s+(.+))?$/i, (msg) ->
-      robot.markov.generateForward msg.match[2] or '', (err, text) ->
-        return reportErr(err) if err?
-        msg.send text
+    activeModelNames.push generateDefaultModel(robot, config)
 
   if config.reverseModel
-    robot.markov.createModel 'default_reverse', {}, (model) ->
-      model.processWith processors.reverseWords
-
-    activeModelNames.push 'default_reverse'
-
-    robot.markov.generateReverse = (seed, callback) ->
-      robot.markov.modelNamed 'default_reverse', (model) ->
-        model.generate seed, config.generateMax, callback
-
-    # Generate reverse markov chains on demand, optionally seeded by some end state
-    robot.respond /remarkov(\s+(.+))?$/i, (msg) ->
-      robot.markov.generateReverse msg.match[2] or '', (err, text) ->
-        return reportErr(err) if err?
-        msg.send text
+    activeModelNames.push generateReverseModel(robot, config)
 
   if config.defaultModel and config.reverseModel
+    generateMiddleModel robot, config
 
-    robot.markov.generateMiddle = (seed, callback) ->
-      generateRight = (cb) ->
-        robot.markov.modelNamed 'default_forward', (model) ->
-          model.generate seed, config.generateMax, cb
-
-      generateRest = (right, cb) ->
-        words = processors.words.pre(right)
-        rightSeed = words.shift() or ''
-
-        robot.markov.modelNamed 'default_reverse', (model) ->
-          model.generate rightSeed, config.generateMax, (err, left) ->
-            return cb(err) if err?
-            cb(null, [left, words...].join ' ')
-
-      generateRight (err, right) ->
-        return callback(err) if err?
-        generateRest right, callback
-
-    # Generate markov chains with the seed in the middle
-    robot.respond /mmarkov(\s+(.+))?$/i, (msg) ->
-      robot.markov.generateMiddle msg.match[2] or '', (err, text) ->
-        return reportErr(err) if err?
-        msg.send text
-
-  if activeModelNames.length isnt 0
-
-    learningListener = (msg) ->
+  if activeModelNames.length isnt 0 or config.createUserModels?
+    attachRobotListener robot, config.learningListenMode, (msg) ->
       # Ignore empty messages
       return if !msg.message.text
 
@@ -87,26 +112,19 @@ module.exports = (robot, config) ->
       for name in activeModelNames
         robot.markov.modelNamed name, (model) -> model.learn msg.message.text
 
-    if config.learningListenMode == 'hear-all'
-      robot.hear /.*/i, learningListener
-    else if config.learningListenMode == 'catch-all'
-      robot.catchAll learningListener
-    else
-      robot.hear RegExp("" + config.learningListenMode), learningListener
+      # add per-user models to the list as we see them
+      username = msg.envelope.user.name
+      if config.createUserModels and username not in config.userModelBlackList
+        if config.userModelWhiteList.length is 0 or config.userModelWhiteList[username]
+          userModelName = getUserModel username, config, robot
+          robot.markov.modelNamed userModelName, (model) -> model.learn msg.message.text
 
     if config.respondChance > 0
-      respondListener = (msg) ->
+      attachRobotListener robot, config.respondListenMode, (msg) ->
         if Math.random() < config.respondChance
-          randomWord = msg.random(processors.words.pre(msg.message.text)) or ''
+          randomWord = msg.random(processors.words.pre msg.message.text) or ''
 
           if config.reverseModel
             robot.markov.generateMiddle randomWord, (text) -> msg.send text
           else
             robot.markov.generateForward randomWord, (text) -> msg.send text
-
-      if config.respondListenMode == 'hear-all'
-           robot.hear /.*/i, respondListener
-         else if config.respondListenMode == 'catch-all'
-           robot.catchAll respondListener
-         else
-           robot.hear RegExp("" + config.respondListenMode), respondListener
