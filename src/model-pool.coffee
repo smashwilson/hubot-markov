@@ -40,7 +40,7 @@ class ModelPool
     else
       storageImpl = @defaultStorageImpl
 
-    storage = new storageImpl(options.storageUrl, name, @robot)
+    storage = new storageImpl(options.storageUrl or @config.storageUrl, name, @robot)
     storage.initialize (err) ->
       if err?
         queue.failed()
